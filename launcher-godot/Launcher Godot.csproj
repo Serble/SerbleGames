@@ -1,0 +1,14 @@
+<Project Sdk="Godot.NET.Sdk/4.6.1">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>LauncherGodot</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SerbleGames.Client\SerbleGames.Client.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\serble_logo.png" />
+  </ItemGroup>
+</Project>

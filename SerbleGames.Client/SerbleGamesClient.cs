@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -108,6 +109,15 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         HttpResponseMessage response = await _httpClient.PostAsync($"/game/{gameId}/icon", null);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadAsStringAsync()).Trim('"');
+    }
+    
+    public async Task<byte[]?> GetIcon(string gameId) {
+        HttpResponseMessage response = await _httpClient.GetAsync($"/game/{gameId}/icon");
+        if (response.StatusCode == HttpStatusCode.NotFound) {
+            return null;
+        }
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsByteArrayAsync();
     }
 
     public async Task UploadRelease(string gameId, string platform, Stream fileStream) {

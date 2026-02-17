@@ -1,0 +1,44 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Serble Games Launcher"
+config/version="0.0.1"
+run/main_scene="uid://b2dn3bgnxsdrx"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
+run/low_processor_mode=true
+config/icon="uid://larhbdjdq81b"
+
+[autoload]
+
+GlobalGd="*uid://ds47h5h8u5x6m"
+Global="*uid://cycx4pw77ufme"
+
+[display]
+
+window/energy_saving/keep_screen_on=false
+window/subwindows/embed_subwindows=false
+
+[dotnet]
+
+project/assembly_name="Launcher Godot"
+
+[gui]
+
+theme/custom="uid://csuaer3tvrtcm"
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"

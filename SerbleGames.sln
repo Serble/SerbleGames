@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerbleGames.Client", "Serbl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerbleGames.Client.Test", "SerbleGames.Client.Test\SerbleGames.Client.Test.csproj", "{FEE8EFF6-9944-47CD-A93F-FDCA6066D622}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher Godot", "launcher-godot\Launcher Godot.csproj", "{AB87F22F-E87B-46FB-BF61-5238142C115F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,18 @@ Global
 		{FEE8EFF6-9944-47CD-A93F-FDCA6066D622}.Release|x64.Build.0 = Release|Any CPU
 		{FEE8EFF6-9944-47CD-A93F-FDCA6066D622}.Release|x86.ActiveCfg = Release|Any CPU
 		{FEE8EFF6-9944-47CD-A93F-FDCA6066D622}.Release|x86.Build.0 = Release|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Debug|x64.Build.0 = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Debug|x86.Build.0 = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Release|x64.ActiveCfg = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Release|x64.Build.0 = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Release|x86.ActiveCfg = Debug|Any CPU
+		{AB87F22F-E87B-46FB-BF61-5238142C115F}.Release|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

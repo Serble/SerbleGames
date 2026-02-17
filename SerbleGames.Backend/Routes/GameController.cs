@@ -224,12 +224,13 @@ public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> 
 
         return Ok(await s3.GetPreSignedURLAsync(request));
     }
+    
     [HttpGet("{id}/icon")]
     [AllowAnonymous]
     public async Task<ActionResult> GetIcon(string id) {
         Game? game = await games.GetGameById(id);
-        if (game == null || game.Icon == null) {
-            return Redirect("/serble_logo.png"); // Default icon
+        if (game?.Icon == null) {
+            return NotFound();
         }
 
         string key = $"{id}/icon/{game.Icon}";
@@ -238,7 +239,7 @@ public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> 
             return File(response.ResponseStream, response.Headers.ContentType);
         }
         catch (AmazonS3Exception e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound) {
-            return Redirect("/serble_logo.png");
+            return NotFound();
         }
     }
 

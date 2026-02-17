@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://dibbhya13iv7m"]
+
+[ext_resource type="Texture2D" uid="uid://larhbdjdq81b" path="res://Assets/serble_logo.png" id="1_sdrmp"]
+[ext_resource type="Script" uid="uid://b3wpcm5u8pfxy" path="res://Menus/Login.cs" id="1_x8jpj"]
+
+[node name="Login" type="Control" unique_id=1067988676]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_x8jpj")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1521953331]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.047058824, 0.06666667, 0.09019608, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=37254469]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="CenterContainer" unique_id=937820201]
+custom_minimum_size = Vector2(412, 512)
+layout_mode = 2
+
+[node name="TextureRect" type="TextureRect" parent="CenterContainer/Panel" unique_id=1132916623]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -128.0
+offset_top = 54.0
+offset_right = 128.0
+offset_bottom = 310.0
+grow_horizontal = 2
+texture = ExtResource("1_sdrmp")
+stretch_mode = 4
+
+[node name="LoginButton" type="Button" parent="CenterContainer/Panel" unique_id=694773526]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -158.0
+offset_top = 134.0
+offset_right = 158.0
+offset_bottom = 189.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Login With Serble"
+
+[connection signal="pressed" from="CenterContainer/Panel/LoginButton" to="." method="OnLoginPressed"]
