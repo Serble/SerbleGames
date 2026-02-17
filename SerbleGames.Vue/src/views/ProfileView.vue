@@ -28,6 +28,14 @@
           class="card hover:border-serble-primary transition-all cursor-pointer group flex flex-col"
           @click="router.push(`/game/${game.id}`)"
         >
+          <div class="aspect-video w-full overflow-hidden bg-serble-border/10">
+            <img 
+              :src="`http://localhost:5240/game/${game.id}/icon`" 
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              alt="Game Icon"
+              @error="(e) => e.target.src = '/serble_logo.png'"
+            />
+          </div>
           <div class="p-6 flex-grow">
             <h3 class="text-xl font-bold mb-2 group-hover:text-serble-primary transition-colors">{{ game.name }}</h3>
             <p class="text-serble-text-muted text-sm line-clamp-3 mb-4">{{ game.description }}</p>

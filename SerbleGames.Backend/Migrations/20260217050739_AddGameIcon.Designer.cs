@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SerbleGames.Backend.Database;
 
@@ -11,9 +12,11 @@ using SerbleGames.Backend.Database;
 namespace SerbleGames.Backend.Migrations
 {
     [DbContext(typeof(GamesDatabaseContext))]
-    partial class GamesDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20260217050739_AddGameIcon")]
+    partial class AddGameIcon
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,34 +24,6 @@ namespace SerbleGames.Backend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
-
-            modelBuilder.Entity("SerbleGames.Backend.Schemas.Db.Achievement", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("GameId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<bool>("Hidden")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Icon")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Achievements");
-                });
 
             modelBuilder.Entity("SerbleGames.Backend.Schemas.Db.Game", b =>
                 {
@@ -105,12 +80,6 @@ namespace SerbleGames.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime?>("LastPlayed")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<double>("Playtime")
-                        .HasColumnType("double");
-
                     b.Property<DateTime>("PurchaseDate")
                         .HasColumnType("datetime(6)");
 
@@ -139,27 +108,6 @@ namespace SerbleGames.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("SerbleGames.Backend.Schemas.Db.UserAchievement", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("AchievementId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("DateEarned")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserAchievements");
                 });
 #pragma warning restore 612, 618
         }

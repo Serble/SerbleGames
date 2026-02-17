@@ -11,6 +11,17 @@ public interface IGameRepo {
     Task DeleteGame(string id);
     Task<GameOwnership?> GetOwnership(string userId, string gameId);
     Task CreateOwnership(GameOwnership ownership);
+    Task UpdateOwnership(GameOwnership ownership);
     Task<IEnumerable<Game>> GetPublicGames(int offset, int limit);
     Task<IEnumerable<Game>> SearchPublicGames(string query, int offset, int limit);
+    
+    // Achievements
+    Task<IEnumerable<Achievement>> GetAchievementsByGameId(string gameId);
+    Task<Achievement?> GetAchievementById(string id);
+    Task CreateAchievement(Achievement achievement);
+    Task UpdateAchievement(Achievement achievement);
+    Task DeleteAchievement(string id);
+    Task GrantAchievement(UserAchievement userAchievement);
+    Task<IEnumerable<Achievement>> GetEarnedAchievements(string userId, string gameId);
+    Task<bool> HasAchievement(string userId, string achievementId);
 }

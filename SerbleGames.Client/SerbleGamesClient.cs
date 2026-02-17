@@ -87,6 +87,11 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task AddPlaytime(string id, double minutes) {
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"/game/{id}/playtime", new { minutes });
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<string> GetUploadUrl(string gameId, string platform) {
         HttpResponseMessage response = await _httpClient.PostAsync($"/game/{gameId}/release/{platform}", null);
         response.EnsureSuccessStatusCode();
@@ -99,6 +104,12 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         return (await response.Content.ReadAsStringAsync()).Trim('"');
     }
 
+    public async Task<string> GetIconUploadUrl(string gameId) {
+        HttpResponseMessage response = await _httpClient.PostAsync($"/game/{gameId}/icon", null);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadAsStringAsync()).Trim('"');
+    }
+
     public async Task UploadRelease(string gameId, string platform, Stream fileStream) {
         string uploadUrl = await GetUploadUrl(gameId, platform);
         using HttpClient uploadClient = new();
@@ -107,11 +118,69 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         HttpResponseMessage response = await uploadClient.PutAsync(uploadUrl, content);
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task UploadIcon(string gameId, Stream iconStream, string contentType = "image/png") {
+        string uploadUrl = await GetIconUploadUrl(gameId);
+        using HttpClient uploadClient = new();
+        using StreamContent content = new(iconStream);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        HttpResponseMessage response = await uploadClient.PutAsync(uploadUrl, content);
+        response.EnsureSuccessStatusCode();
+    }
+
+    // Achievements
+    public async Task<IEnumerable<Achievement>?> GetAchievements(string gameId) {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<Achievement>>($"/game/{gameId}/achievements");
+    }
+
+    public async Task<Achievement?> CreateAchievement(string gameId, AchievementCreateRequest request) {
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"/game/{gameId}/achievements", request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<Achievement>();
+    }
+
+    public async Task<Achievement?> UpdateAchievement(string achievementId, AchievementUpdateRequest request) {
+        HttpResponseMessage response = await _httpClient.PatchAsJsonAsync($"/game/achievement/{achievementId}", request);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<Achievement>();
+    }
+
+    public async Task DeleteAchievement(string achievementId) {
+        HttpResponseMessage response = await _httpClient.DeleteAsync($"/game/achievement/{achievementId}");
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task GrantAchievement(string achievementId, string userId) {
+        HttpResponseMessage response = await _httpClient.PostAsync($"/game/achievement/{achievementId}/grant/{userId}", null);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<IEnumerable<Achievement>?> GetEarnedAchievements(string gameId) {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<Achievement>>($"/game/{gameId}/achievements/earned");
+    }
+
+    public async Task<string> GetAchievementIconUploadUrl(string achievementId) {
+        HttpResponseMessage response = await _httpClient.PostAsync($"/game/achievement/{achievementId}/icon", null);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadAsStringAsync()).Trim('"');
+    }
+
+    public async Task UploadAchievementIcon(string achievementId, Stream iconStream, string contentType = "image/png") {
+        string uploadUrl = await GetAchievementIconUploadUrl(achievementId);
+        using HttpClient uploadClient = new();
+        using StreamContent content = new(iconStream);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+        HttpResponseMessage response = await uploadClient.PutAsync(uploadUrl, content);
+        response.EnsureSuccessStatusCode();
+    }
 }
 
 public record AuthResponse(bool Success, string? AccessToken);
 public record UserAccountResponse(string Id, string Username);
 public record PublicUserResponse(string Id, string Username);
-public record Game(string Id, string Name, string Description, decimal Price, DateTime PublishDate, string? TrailerVideo, bool Public, string? LinuxBuild, string? WindowsBuild, string? MacBuild);
-public record GameCreateRequest(string Name, string Description, decimal Price, DateTime? PublishDate, string? TrailerVideo, bool Public = false);
-public record GameUpdateRequest(string? Name, string? Description, decimal? Price, DateTime? PublishDate, string? TrailerVideo, bool? Public);
+public record Game(string Id, string Name, string Description, decimal Price, DateTime PublishDate, string? TrailerVideo, bool Public, string? LinuxBuild, string? WindowsBuild, string? MacBuild, string? Icon, double Playtime = 0, DateTime? LastPlayed = null);
+public record GameCreateRequest(string Name, string Description, decimal Price, DateTime? PublishDate, string? TrailerVideo, bool Public = false, string? Icon = null);
+public record GameUpdateRequest(string? Name, string? Description, decimal? Price, DateTime? PublishDate, string? TrailerVideo, bool? Public, string? Icon);
+public record Achievement(string Id, string GameId, string Title, string Description, string? Icon, bool Hidden);
+public record AchievementCreateRequest(string Title, string Description, bool Hidden = false);
+public record AchievementUpdateRequest(string? Title, string? Description, bool? Hidden);

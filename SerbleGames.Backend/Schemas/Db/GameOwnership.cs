@@ -8,4 +8,6 @@ public class GameOwnership {
     public string UserId { get; set; } = null!;
     public string GameId { get; set; } = null!;
     public DateTime PurchaseDate { get; set; }
+    public double Playtime { get; set; } // In minutes
+    public DateTime? LastPlayed { get; set; }
 }

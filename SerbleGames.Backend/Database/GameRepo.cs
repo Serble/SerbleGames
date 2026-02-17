@@ -25,7 +25,23 @@ public class GameRepo(GamesDatabaseContext context) : IGameRepo {
             .Join(context.Games, 
                 o => o.GameId, 
                 g => g.Id, 
-                (o, g) => g)
+                (o, g) => new { Game = g, Ownership = o })
+            .Select(x => new Game {
+                Id = x.Game.Id,
+                Name = x.Game.Name,
+                Description = x.Game.Description,
+                OwnerId = x.Game.OwnerId,
+                Price = x.Game.Price,
+                PublishDate = x.Game.PublishDate,
+                TrailerVideo = x.Game.TrailerVideo,
+                Public = x.Game.Public,
+                LinuxBuild = x.Game.LinuxBuild,
+                WindowsBuild = x.Game.WindowsBuild,
+                MacBuild = x.Game.MacBuild,
+                Icon = x.Game.Icon,
+                Playtime = x.Ownership.Playtime,
+                LastPlayed = x.Ownership.LastPlayed
+            })
             .ToListAsync();
     }
 
@@ -54,6 +70,11 @@ public class GameRepo(GamesDatabaseContext context) : IGameRepo {
         await context.SaveChangesAsync();
     }
 
+    public async Task UpdateOwnership(GameOwnership ownership) {
+        context.Entry(ownership).State = EntityState.Modified;
+        await context.SaveChangesAsync();
+    }
+
     public async Task<IEnumerable<Game>> GetPublicGames(int offset, int limit) {
         return await context.Games
             .Where(g => g.Public)
@@ -68,5 +89,55 @@ public class GameRepo(GamesDatabaseContext context) : IGameRepo {
             .Skip(offset)
             .Take(limit)
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Achievement>> GetAchievementsByGameId(string gameId) {
+        return await context.Achievements.Where(a => a.GameId == gameId).ToListAsync();
+    }
+
+    public async Task<Achievement?> GetAchievementById(string id) {
+        return await context.Achievements.FindAsync(id);
+    }
+
+    public async Task CreateAchievement(Achievement achievement) {
+        context.Achievements.Add(achievement);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAchievement(Achievement achievement) {
+        context.Entry(achievement).State = EntityState.Modified;
+        await context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAchievement(string id) {
+        Achievement? achievement = await context.Achievements.FindAsync(id);
+        if (achievement != null) {
+            context.Achievements.Remove(achievement);
+            // Also delete user achievements
+            IQueryable<UserAchievement> userAchievements = context.UserAchievements.Where(ua => ua.AchievementId == id);
+            context.UserAchievements.RemoveRange(userAchievements);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    public async Task GrantAchievement(UserAchievement userAchievement) {
+        context.UserAchievements.Add(userAchievement);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Achievement>> GetEarnedAchievements(string userId, string gameId) {
+        return await context.UserAchievements
+            .Where(ua => ua.UserId == userId)
+            .Join(context.Achievements,
+                ua => ua.AchievementId,
+                a => a.Id,
+                (ua, a) => new { UserAchievement = ua, Achievement = a })
+            .Where(x => x.Achievement.GameId == gameId)
+            .Select(x => x.Achievement)
+            .ToListAsync();
+    }
+
+    public async Task<bool> HasAchievement(string userId, string achievementId) {
+        return await context.UserAchievements.AnyAsync(ua => ua.UserId == userId && ua.AchievementId == achievementId);
     }
 }

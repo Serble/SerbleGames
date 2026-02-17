@@ -10,11 +10,23 @@
       <div 
         v-for="game in games" 
         :key="game.id" 
-        class="card group hover:border-serble-primary transition-all flex flex-col"
+        class="card group hover:border-serble-primary transition-all flex flex-col overflow-hidden"
       >
+        <div class="aspect-video w-full overflow-hidden bg-serble-border/10">
+          <img 
+            :src="`http://localhost:5240/game/${game.id}/icon`" 
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            alt="Game Icon"
+            @error="(e) => e.target.src = '/serble_logo.png'"
+          />
+        </div>
         <div class="p-6 flex-grow">
           <h3 class="text-xl font-bold mb-2 group-hover:text-serble-primary transition-colors">{{ game.name }}</h3>
           <p class="text-serble-text-muted text-sm line-clamp-2">{{ game.description }}</p>
+          <div v-if="game.playtime !== undefined" class="mt-4 flex items-center justify-between text-xs text-serble-text-muted">
+            <span class="flex items-center"><Clock class="w-3 h-3 mr-1" /> {{ formatPlaytime(game.playtime) }}</span>
+            <span v-if="game.lastPlayed" title="Last Played">Last: {{ new Date(game.lastPlayed).toLocaleDateString() }}</span>
+          </div>
         </div>
         <div class="p-4 bg-serble-border/10 border-t border-serble-border flex flex-col gap-2">
           <button @click="router.push(`/game/${game.id}`)" class="btn btn-outline text-sm w-full">View Details</button>
@@ -63,12 +75,17 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { Download, Library } from 'lucide-vue-next';
+import { Download, Library, Clock } from 'lucide-vue-next';
 import client from '../api/client';
 
 const router = useRouter();
 const games = ref([]);
 const loading = ref(true);
+
+const formatPlaytime = (minutes) => {
+  if (minutes < 60) return `${Math.round(minutes)}m`;
+  return `${(minutes / 60).toFixed(1)}h`;
+};
 
 const fetchLibrary = async () => {
   loading.value = true;

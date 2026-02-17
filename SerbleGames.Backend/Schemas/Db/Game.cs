@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SerbleGames.Backend.Schemas.Db;
 
@@ -17,4 +18,10 @@ public class Game {
     public string? LinuxBuild { get; set; }
     public string? WindowsBuild { get; set; }
     public string? MacBuild { get; set; }
+    public string? Icon { get; set; }
+    
+    [NotMapped]
+    public double Playtime { get; set; }
+    [NotMapped]
+    public DateTime? LastPlayed { get; set; }
 }
