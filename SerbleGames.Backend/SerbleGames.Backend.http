@@ -1,0 +1,6 @@
+@Addr = http://localhost:5240
+
+GET {{Addr}}/
+Accept: application/json
+
+###

@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+}
+
+.btn {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-primary {
+  @apply bg-serble-primary text-white hover:bg-serble-primary-hover;
+}
+
+.btn-outline {
+  @apply border border-serble-border text-serble-text hover:bg-serble-border;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+.card {
+  @apply bg-serble-card border border-serble-border rounded-lg overflow-hidden;
+}
+
+.input {
+  @apply w-full bg-serble-dark border border-serble-border rounded-md px-3 py-2 text-serble-text focus:outline-none focus:border-serble-primary;
+}
