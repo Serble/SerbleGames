@@ -12,7 +12,7 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
     }
 
-    public async Task<string> LoginWithOAuth(string clientId, string redirectUri = "http://localhost:3000/callback") {
+    public async Task<string> LoginWithOAuth(string clientId, string redirectUri = "http://localhost:59941/callback") {
         OAuthHelper oauth = new(clientId, redirectUri);
         string code = await oauth.GetAuthorizationCode();
         
