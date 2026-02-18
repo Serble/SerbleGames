@@ -20,7 +20,7 @@ builder.Services.AddOptions<S3Settings>()
 JwtSettings jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? throw new Exception("JWT settings not found");
 S3Settings s3Settings = builder.Configuration.GetSection("S3").Get<S3Settings>() ?? throw new Exception("S3 settings not found");
 
-builder.Services.AddSingleton<IAmazonS3>(sp => {
+builder.Services.AddSingleton<IAmazonS3>(_ => {
     AmazonS3Config config = new() {
         ServiceURL = s3Settings.ServiceUrl
     };
@@ -61,6 +61,7 @@ builder.Services.AddDbContext<GamesDatabaseContext>(options =>
 
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IGameRepo, GameRepo>();
+builder.Services.AddScoped<IPackageRepo, PackageRepo>();
 builder.Services.AddScoped<IJwtManager, JwtManager>();
 builder.Services.AddHttpClient<ISerbleApiClient, SerbleApiClient>();
 
@@ -76,3 +77,4 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.Run();
+Console.WriteLine("Bye!");

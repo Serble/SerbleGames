@@ -22,7 +22,7 @@
         </div>
         <div class="p-6 flex-grow">
           <h3 class="text-xl font-bold mb-2 group-hover:text-serble-primary transition-colors">{{ game.name }}</h3>
-          <p class="text-serble-text-muted text-sm line-clamp-2">{{ game.description }}</p>
+          <p class="text-serble-text-muted text-sm line-clamp-2">{{ markdownToPlainText(game.description) }}</p>
           <div v-if="game.playtime !== undefined" class="mt-4 flex items-center justify-between text-xs text-serble-text-muted">
             <span class="flex items-center"><Clock class="w-3 h-3 mr-1" /> {{ formatPlaytime(game.playtime) }}</span>
             <span v-if="game.lastPlayed" title="Last Played">Last: {{ new Date(game.lastPlayed).toLocaleDateString() }}</span>
@@ -32,7 +32,7 @@
           <button @click="router.push(`/game/${game.id}`)" class="btn btn-outline text-sm w-full">View Details</button>
           <div class="flex gap-2">
             <button 
-              v-if="game.windowsBuild" 
+              v-if="game.windowsRelease" 
               @click="download(game.id, 'windows')" 
               class="btn btn-primary text-xs flex-1 px-1 flex items-center justify-center"
               title="Download for Windows"
@@ -40,7 +40,7 @@
               <Download class="w-3 h-3 mr-1" /> Win
             </button>
             <button 
-              v-if="game.linuxBuild" 
+              v-if="game.linuxRelease" 
               @click="download(game.id, 'linux')" 
               class="btn btn-primary text-xs flex-1 px-1 flex items-center justify-center"
               title="Download for Linux"
@@ -48,7 +48,7 @@
               <Download class="w-3 h-3 mr-1" /> Lin
             </button>
             <button 
-              v-if="game.macBuild" 
+              v-if="game.macRelease" 
               @click="download(game.id, 'mac')" 
               class="btn btn-primary text-xs flex-1 px-1 flex items-center justify-center"
               title="Download for macOS"
@@ -56,7 +56,7 @@
               <Download class="w-3 h-3 mr-1" /> Mac
             </button>
           </div>
-          <p v-if="!game.windowsBuild && !game.linuxBuild && !game.macBuild" class="text-[10px] text-center text-serble-text-muted italic">No builds available</p>
+          <p v-if="!game.windowsRelease && !game.linuxRelease && !game.macRelease" class="text-[10px] text-center text-serble-text-muted italic">No packages available</p>
         </div>
       </div>
     </div>
@@ -77,6 +77,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { Download, Library, Clock } from 'lucide-vue-next';
 import client from '../api/client';
+import { markdownToPlainText } from '../utils/markdown.js';
 
 const router = useRouter();
 const games = ref([]);

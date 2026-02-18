@@ -35,10 +35,10 @@ public class GameRepo(GamesDatabaseContext context) : IGameRepo {
                 PublishDate = x.Game.PublishDate,
                 TrailerVideo = x.Game.TrailerVideo,
                 Public = x.Game.Public,
-                LinuxBuild = x.Game.LinuxBuild,
-                WindowsBuild = x.Game.WindowsBuild,
-                MacBuild = x.Game.MacBuild,
                 Icon = x.Game.Icon,
+                LinuxRelease = x.Game.LinuxRelease,
+                MacRelease = x.Game.MacRelease,
+                WindowsRelease = x.Game.WindowsRelease,
                 Playtime = x.Ownership.Playtime,
                 LastPlayed = x.Ownership.LastPlayed
             })

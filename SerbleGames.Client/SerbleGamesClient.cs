@@ -45,6 +45,10 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         return await _httpClient.GetFromJsonAsync<IEnumerable<Game>>(url);
     }
 
+    public async Task<Game?> GetPublicGame(string id) {
+        return await _httpClient.GetFromJsonAsync<Game>($"/game/public/{id}");
+    }
+
     public async Task<IEnumerable<Game>?> SearchPublicGames(string query, int offset = 0, int limit = 10) {
         string url = QueryHelpers.AddQueryString("/game/search", new Dictionary<string, string?> {
             ["query"] = query,
@@ -93,10 +97,40 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<string> GetUploadUrl(string gameId, string platform) {
-        HttpResponseMessage response = await _httpClient.PostAsync($"/game/{gameId}/release/{platform}", null);
+    public async Task<PackageCreateResponse> CreatePackage(string gameId, PackageCreateRequest request) {
+        PackageCreateRequest normalizedRequest = request.GameId == gameId
+            ? request
+            : request with { GameId = gameId };
+
+        HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"/game/{gameId}/package", normalizedRequest);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadAsStringAsync()).Trim('"');
+        PackageCreateResponse? createResponse = await response.Content.ReadFromJsonAsync<PackageCreateResponse>();
+        if (createResponse == null) {
+            throw new Exception("Failed to create package");
+        }
+        return createResponse;
+    }
+
+    public async Task<IEnumerable<Package>?> GetPackages(string gameId) {
+        return await _httpClient.GetFromJsonAsync<IEnumerable<Package>>($"/game/{gameId}/package");
+    }
+    
+    public async Task<Package?> GetPackage(string gameId, string packageId) {
+        return await _httpClient.GetFromJsonAsync<Package>($"/game/{gameId}/package/{packageId}");
+    }
+
+    public async Task DeletePackage(string gameId, string packageId) {
+        HttpResponseMessage response = await _httpClient.DeleteAsync($"/game/{gameId}/package/{packageId}");
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task UploadPackage(string gameId, PackageCreateRequest request, Stream fileStream) {
+        PackageCreateResponse createResponse = await CreatePackage(gameId, request);
+        using HttpClient uploadClient = new();
+        using StreamContent content = new(fileStream);
+        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+        HttpResponseMessage response = await uploadClient.PutAsync(createResponse.UploadUrl, content);
+        response.EnsureSuccessStatusCode();
     }
 
     public async Task<string> GetDownloadUrl(string gameId, string platform) {
@@ -118,15 +152,6 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         }
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsByteArrayAsync();
-    }
-
-    public async Task UploadRelease(string gameId, string platform, Stream fileStream) {
-        string uploadUrl = await GetUploadUrl(gameId, platform);
-        using HttpClient uploadClient = new();
-        using StreamContent content = new(fileStream);
-        content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
-        HttpResponseMessage response = await uploadClient.PutAsync(uploadUrl, content);
-        response.EnsureSuccessStatusCode();
     }
 
     public async Task UploadIcon(string gameId, Stream iconStream, string contentType = "image/png") {
@@ -183,14 +208,26 @@ public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
         HttpResponseMessage response = await uploadClient.PutAsync(uploadUrl, content);
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<byte[]?> GetAchievementIcon(string achievementId) {
+        HttpResponseMessage response = await _httpClient.GetAsync($"/game/achievement/{achievementId}/icon");
+        if (response.StatusCode == HttpStatusCode.NotFound) {
+            return null;
+        }
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsByteArrayAsync();
+    }
 }
 
 public record AuthResponse(bool Success, string? AccessToken);
 public record UserAccountResponse(string Id, string Username);
 public record PublicUserResponse(string Id, string Username);
-public record Game(string Id, string Name, string Description, decimal Price, DateTime PublishDate, string? TrailerVideo, bool Public, string? LinuxBuild, string? WindowsBuild, string? MacBuild, string? Icon, double Playtime = 0, DateTime? LastPlayed = null);
+public record Game(string Id, string Name, string Description, decimal Price, DateTime PublishDate, string? TrailerVideo, bool Public, string? LinuxRelease, string? WindowsRelease, string? MacRelease, string? Icon, double Playtime = 0, DateTime? LastPlayed = null);
 public record GameCreateRequest(string Name, string Description, decimal Price, DateTime? PublishDate, string? TrailerVideo, bool Public = false, string? Icon = null);
-public record GameUpdateRequest(string? Name, string? Description, decimal? Price, DateTime? PublishDate, string? TrailerVideo, bool? Public, string? Icon);
+public record GameUpdateRequest(string? Name, string? Description, decimal? Price, DateTime? PublishDate, string? TrailerVideo, bool? Public, string? Icon, string? WindowsRelease, string? LinuxRelease, string? MacRelease);
+public record Package(string Id, string Name, DateTime CreatedAt, string GameId, string Platform, string MainBinary, string LaunchArguments);
+public record PackageCreateRequest(string Name, string GameId, string Platform, string MainBinary, string LaunchArguments);
+public record PackageCreateResponse(Package Package, string UploadUrl);
 public record Achievement(string Id, string GameId, string Title, string Description, string? Icon, bool Hidden);
 public record AchievementCreateRequest(string Title, string Description, bool Hidden = false);
 public record AchievementUpdateRequest(string? Title, string? Description, bool? Hidden);

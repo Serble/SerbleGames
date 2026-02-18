@@ -38,7 +38,7 @@
           </div>
           <div class="p-6 flex-grow">
             <h3 class="text-xl font-bold mb-2 group-hover:text-serble-primary transition-colors">{{ game.name }}</h3>
-            <p class="text-serble-text-muted text-sm line-clamp-3 mb-4">{{ game.description }}</p>
+            <p class="text-serble-text-muted text-sm line-clamp-3 mb-4">{{ markdownToPlainText(game.description) }}</p>
           </div>
           <div class="px-6 py-4 bg-serble-border/10 border-t border-serble-border flex items-center justify-between">
             <span class="text-lg font-bold text-serble-primary">
@@ -59,6 +59,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import client from '../api/client';
+import { markdownToPlainText } from '../utils/markdown.js';
 
 const route = useRoute();
 const router = useRouter();

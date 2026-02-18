@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Godot;
 using LauncherGodot.Menus.Elements;
 using LauncherGodot.Scripts;
@@ -10,12 +11,17 @@ namespace LauncherGodot.Menus;
 
 public partial class Main : Control {
 	private const string Clock = "⏲";
+	private const string CompatibleColour = "00853e";
+	private const string IncompatibleColour = "e8282b";
 	
 	private Label _initialLabel;
-	private Control _gameList;
+	private Control _storeGameList;
+	private Control _libraryGameList;
 	private TabContainer _tabs;
 	private PackedScene _gameEntryScene = GD.Load<PackedScene>("res://Menus/Elements/game_store_entry.tscn");
+	private PackedScene _achievementEntryScene = GD.Load<PackedScene>("res://Menus/Elements/achievement.tscn");
 
+	private Game _currentGame;
 	private Control _currentGameContent;
 	private Control _currentGameNoContent;
 	private TextureRect _currentGameIcon;
@@ -27,6 +33,13 @@ public partial class Main : Control {
 	private Control _currentGameAddToLibrary;
 	private Control _currentGamePlay;
 	private Control _currentGameInstall;
+	private Control _currentGameNotRunningContainer;
+	private Control _currentGameKillButton;
+	private Control _currentGameDesc;
+	private Control _currentGameAchievementsContainer;
+	private Control _currentGameAchievementsPanel;
+	private Label _currentGameAchievementCount;
+	private Label _currentGameCompatibility;
 	
 	public override async void _Ready() {
 		try {
@@ -36,8 +49,8 @@ public partial class Main : Control {
 			GetNode<Label>("%Username").Text = (await AuthManager.GetAccountInfo()).Username;
 			GetNode<Label>("%Id").Text = "User ID: " + (await AuthManager.GetAccountInfo()).Id;
 			
-			_gameList = GetNode<Control>("%GameEntries");
-			DisplayStoreEntries(await AuthManager.Client.GetPublicGames());
+			_storeGameList = GetNode<Control>("%StoreGameEntries");
+			_libraryGameList = GetNode<Control>("%LibraryGameEntries");
 			
 			_currentGameContent = GetNode<Control>("%CurrentGameContent");
 			_currentGameNoContent = GetNode<Control>("%CurrentGameNoContent");
@@ -50,6 +63,24 @@ public partial class Main : Control {
 			_currentGameAddToLibrary = GetNode<Control>("%CurrentGameAddToLibrary");
 			_currentGamePlay = GetNode<Control>("%CurrentGamePlay");
 			_currentGameInstall = GetNode<Control>("%CurrentGameInstall");
+			_currentGameNotRunningContainer = GetNode<Control>("%CurrentGameNotRunningContainer");
+			_currentGameKillButton = GetNode<Control>("%CurrentGameKillButton");
+			_currentGameDesc = GetNode<Control>("%CurrentGameDesc");
+			_currentGameAchievementsContainer = GetNode<Control>("%CurrentGameAchievementsContainer");
+			_currentGameAchievementsPanel = GetNode<Control>("%CurrentGameAchievementsPanel");
+			_currentGameAchievementCount = GetNode<Label>("%CurrentGameAchievementCount");
+			_currentGameCompatibility = GetNode<Label>("%CurrentGameCompatibility");
+			
+			_currentGameContent.Visible = false;
+			_currentGameNoContent.Visible = true;
+			_tabs.CurrentTab = 0;  // library
+			
+			// hooks
+			InstallManager.GameClosed += OnGameClosed;
+			
+			// now do slow stuff
+			DisplayStoreEntries(await AuthManager.Client.GetPublicGames(0, 18));
+			DisplayLibraryEntries(await AuthManager.Client.GetOwnedGames());
 		}
 		catch (Exception e) {
 			GD.PrintErr("Failed to load account info: " + e);
@@ -57,30 +88,71 @@ public partial class Main : Control {
 		}
 	}
 
-	public async void DisplayStoreEntries(IEnumerable<Game> games) {
-		foreach (Node child in _gameList.GetChildren()) {
+	public override void _ExitTree() {
+		base._ExitTree();
+		InstallManager.GameClosed -= OnGameClosed;
+	}
+	
+	private void OnGameClosed(string gameId) {
+		if (_currentGame != null && _currentGame.Id == gameId) {
+			RefreshCurrentGame();
+		}
+	}
+
+	public void DisplayStoreEntries(IEnumerable<Game> games) => DisplayEntries(_storeGameList, games);
+	public void DisplayLibraryEntries(IEnumerable<Game> games) => DisplayEntries(_libraryGameList, games);
+	
+	public async void DisplayEntries(Control parent, IEnumerable<Game> games) {
+		foreach (Node child in parent.GetChildren()) {
 			child.QueueFree();
 		}
 
 		foreach (Game game in games) {
 			GameStoreEntry entry = _gameEntryScene.Instantiate<GameStoreEntry>();
 			await entry.SetGame(game);
-			_gameList.AddChild(entry);
+			parent.AddChild(entry);
 		}
 	}
 	
 	public async void OnStoreSearchTextChanged(string newText) {
-		// clear current entries
-		foreach (Node child in _gameList.GetChildren()) {
-			child.QueueFree();
-		}
+		try {
+			// clear current entries
+			foreach (Node child in _storeGameList.GetChildren()) {
+				child.QueueFree();
+			}
 
-		if (string.IsNullOrWhiteSpace(newText)) {
-			DisplayStoreEntries(await AuthManager.Client.GetPublicGames());
-			return;
-		}
+			if (string.IsNullOrWhiteSpace(newText)) {
+				DisplayStoreEntries(await AuthManager.Client.GetPublicGames(0, 18));
+				return;
+			}
 		
-		DisplayStoreEntries(await AuthManager.Client.SearchPublicGames(newText));
+			DisplayStoreEntries(await AuthManager.Client.SearchPublicGames(newText));
+		}
+		catch (Exception e) {
+			GD.PrintErr("Failed to search store games: " + e);
+		}
+	}
+	
+	public async void OnLibrarySearchTextChanged(string newText) {
+		try {
+			// clear current entries
+			foreach (Node child in _storeGameList.GetChildren()) {
+				child.QueueFree();
+			}
+
+			IEnumerable<Game> games = await AuthManager.Client.GetOwnedGames();
+		
+			// we have to search client-side since there's no API for searching owned games
+			if (string.IsNullOrWhiteSpace(newText)) {
+				DisplayLibraryEntries(games);
+				return;
+			}
+		
+			DisplayLibraryEntries(games!.Where(g => g.Name.Contains(newText, StringComparison.OrdinalIgnoreCase)));
+		}
+		catch (Exception e) {
+			GD.PrintErr("Failed to search library games: " + e);
+		}
 	}
 
 	public async void SelectGame(Game game) {
@@ -89,11 +161,19 @@ public partial class Main : Control {
 			_currentGameContent.Visible = true;
 
 			IEnumerable<Game> ownedGames = await AuthManager.Client.GetOwnedGames();
-			bool owned = ownedGames!.Any(g => g.Id == game.Id);
+			Game ownedGame = ownedGames!.FirstOrDefault(g => g.Id == game.Id);
+			bool owned = ownedGame != null;
+			if (ownedGame != null) {
+				game = ownedGame;
+			}
+			_currentGame = game;
 
 			// general info (not dependent on ownership)
 			_currentGameName.Text = game.Name;
-			_currentGameSubtext.Text = game.Description;
+			
+			// set Markdown desc (it's in gdscript so we have to use Set)
+			_currentGameDesc.Set("markdown_text", "## About this game\n" + game.Description);
+			
 			ImageTexture iconTexture = await Global.GetGameIcon(game);
 			if (iconTexture != null) {
 				_currentGameIcon.Texture = iconTexture;
@@ -103,12 +183,54 @@ public partial class Main : Control {
 				_currentGamePrice.Visible = false;
 				_currentGameAddToLibrary.Visible = false;
 				_currentGameInLibrary.Visible = true;
-				// _currentGamePlay.Visible = true;
-				_currentGamePlaytime.Text = Clock + " " + TimeSpan.FromSeconds(game.Playtime).ToString(@"hh\:mm\:ss");
+				_currentGamePlaytime.Text = Clock + " " + TimeSpan.FromMinutes(game.Playtime).ToString(@"h\h\ m\m");
 				_currentGamePlaytime.Visible = true;
-				_currentGameInstall.Visible = true;
 				_currentGameSubtext.Text = "Last played: " + (game.LastPlayed.HasValue ? game.LastPlayed.Value.ToString("g") : "Never");
 				_currentGameSubtext.Visible = true;
+				_currentGameCompatibility.Visible = false;
+
+				if (InstallManager.IsInstalled(game.Id)) {
+					_currentGamePlay.Visible = true;
+					_currentGameInstall.Visible = false;
+					if (InstallManager.IsRunning(game.Id)) {
+						_currentGameNotRunningContainer.Visible = false;
+						_currentGameKillButton.Visible = true;
+					}
+					else {
+						_currentGameNotRunningContainer.Visible = true;
+						_currentGameKillButton.Visible = false;
+					}
+				}
+				else {
+					_currentGamePlay.Visible = false;
+					_currentGameInstall.Visible = true;
+					_currentGameInstall.GetChild<Button>(0).Disabled = !InstallManager.CanInstall(game);
+				}
+				
+				// achievements
+				foreach (Node child in _currentGameAchievementsContainer.GetChildren()) {
+					if (child is not AchievementEntry) {
+						continue;
+					}
+					child.QueueFree();
+				}
+
+				Achievement[] achievements = (await AuthManager.Client.GetAchievements(game.Id))!.ToArray();
+				_currentGameAchievementsPanel.Visible = false;  // changed if count > 0
+				if (achievements.Length > 0) {
+					HashSet<string> granted = 
+						(await AuthManager.Client.GetEarnedAchievements(game.Id))!
+						.Select(a => a.Id)
+						.ToHashSet();
+				
+					foreach (Achievement achievement in achievements!) {
+						AchievementEntry entry = _achievementEntryScene.Instantiate<AchievementEntry>();
+						entry.LoadData(achievement, granted.Contains(achievement.Id));
+						_currentGameAchievementsContainer.AddChild(entry);
+					}
+					_currentGameAchievementsPanel.Visible = true;
+					_currentGameAchievementCount.Text = $"({granted.Count}/{achievements.Length})";
+				}
 			}
 			else {
 				_currentGamePrice.Text = game.Price == 0 ? "FREE" : "$" + game.Price.ToString("0.00");
@@ -119,6 +241,20 @@ public partial class Main : Control {
 				_currentGameInstall.Visible = false;
 				_currentGamePlaytime.Visible = false;
 				_currentGameSubtext.Visible = false;
+				_currentGameAchievementsPanel.Visible = false;
+				_currentGameCompatibility.Visible = true;
+
+				string platformName = InstallManager.GetOsName().Capitalize();
+				if (InstallManager.CanInstall(game)) {
+					// compatible
+					_currentGameCompatibility.Text = $"Supports {platformName}";
+					_currentGameCompatibility.LabelSettings.FontColor = Color.FromHtml(CompatibleColour);
+				}
+				else {
+					// incompatible
+					_currentGameCompatibility.Text = $"Doesn't support {platformName}";
+					_currentGameCompatibility.LabelSettings.FontColor = Color.FromHtml(IncompatibleColour);
+				}
 			}
 
 			_tabs.CurrentTab = 3;
@@ -128,6 +264,70 @@ public partial class Main : Control {
 			_currentGameNoContent.Visible = true;
 			_currentGameContent.Visible = false;
 		}
+	}
+
+	public async void OnInstallPressed() {
+		try {
+			await InstallManager.Install(_currentGame);
+			RefreshCurrentGame();
+		}
+		catch (Exception e) {
+			GD.PrintErr("Failed to install game: " + e);
+		}
+	}
+
+	public void OnPlayPressed() {
+		Task.Run(() => {
+			InstallManager.Launch(_currentGame.Id);
+			RefreshCurrentGame();
+		});
+	}
+
+	public void OpenCurrentGameInBrowser() {
+		OS.ShellOpen("https://games.serble.net/game/" + _currentGame.Id);
+	}
+
+	public async void AddCurrentGameToLibrary() {
+		try {
+			if (_currentGame.Price > 0) {
+				// can't do it here
+				// open in browser
+				OpenCurrentGameInBrowser();
+				return;
+			}
+			
+			await AuthManager.Client.PurchaseGame(_currentGame.Id);
+			RefreshCurrentGame();
+		}
+		catch (Exception e) {
+			GD.PrintErr("Failed to add game to library: " + e);
+		}
+	}
+
+	public void Quit() {
+		GetTree().Quit();
+	}
+
+	public void Reload() {
+		GetTree().ReloadCurrentScene();
+	}
+
+	public void OnUninstallPressed() {
+		InstallManager.Uninstall(_currentGame.Id);
+		RefreshCurrentGame();
+	}
+	
+	public async void OnKillPressed() {
+		await InstallManager.Kill(_currentGame.Id);
+		RefreshCurrentGame();
+	}
+	
+	public void RefreshCurrentGame() {
+		CallDeferred("RefreshCurrentGameSync");
+	}
+
+	public void RefreshCurrentGameSync() {
+		SelectGame(_currentGame);
 	}
 	
 	public void OnLogoutPressed() {

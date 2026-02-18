@@ -22,13 +22,13 @@
           </div>
           <p class="text-serble-text-muted text-sm">{{ game.id }}</p>
           <div class="flex items-center space-x-4 text-xs text-serble-text-muted mt-2">
-            <span class="flex items-center"><Monitor class="w-3 h-3 mr-1" /> {{ game.windowsBuild ? 'Ready' : 'No build' }}</span>
-            <span class="flex items-center"><Terminal class="w-3 h-3 mr-1" /> {{ game.linuxBuild ? 'Ready' : 'No build' }}</span>
-            <span class="flex items-center"><Apple class="w-3 h-3 mr-1" /> {{ game.macBuild ? 'Ready' : 'No build' }}</span>
+            <span class="flex items-center"><Monitor class="w-3 h-3 mr-1" /> {{ game.windowsRelease ? 'Live' : 'No live package' }}</span>
+            <span class="flex items-center"><Terminal class="w-3 h-3 mr-1" /> {{ game.linuxRelease ? 'Live' : 'No live package' }}</span>
+            <span class="flex items-center"><Apple class="w-3 h-3 mr-1" /> {{ game.macRelease ? 'Live' : 'No live package' }}</span>
           </div>
         </div>
         <div class="flex items-center space-x-2">
-          <button @click="openReleaseManager(game)" class="btn btn-outline text-sm">Manage Releases</button>
+          <button @click="openReleaseManager(game)" class="btn btn-outline text-sm">Manage Packages</button>
           <button @click="openEditModal(game)" class="btn btn-outline p-2"><Edit2 class="w-4 h-4" /></button>
           <button @click="deleteGame(game)" class="btn btn-outline p-2 hover:bg-red-600 hover:border-red-600 group">
             <Trash2 class="w-4 h-4 group-hover:text-white" />
@@ -114,51 +114,127 @@
       <div class="card w-full max-w-3xl overflow-hidden">
         <div class="p-6 border-b border-serble-border flex justify-between items-center bg-serble-card">
           <div>
-            <h2 class="text-2xl font-bold">Manage Releases</h2>
+            <h2 class="text-2xl font-bold">Manage Packages</h2>
             <p class="text-serble-text-muted text-sm">{{ managingGame.name }}</p>
           </div>
           <button @click="managingGame = null" class="text-serble-text-muted hover:text-white"><X class="w-6 h-6" /></button>
         </div>
         <div class="p-6 space-y-8 max-h-[70vh] overflow-y-auto">
           <div class="flex border-b border-serble-border">
-            <button @click="releaseTab = 'releases'" :class="releaseTab === 'releases' ? 'border-b-2 border-serble-primary text-serble-primary' : 'text-serble-text-muted'" class="px-4 py-2 font-medium">Builds</button>
+            <button @click="releaseTab = 'packages'" :class="releaseTab === 'packages' ? 'border-b-2 border-serble-primary text-serble-primary' : 'text-serble-text-muted'" class="px-4 py-2 font-medium">Packages</button>
             <button @click="releaseTab = 'achievements'" :class="releaseTab === 'achievements' ? 'border-b-2 border-serble-primary text-serble-primary' : 'text-serble-text-muted'" class="px-4 py-2 font-medium">Achievements</button>
           </div>
 
-          <div v-if="releaseTab === 'releases'" class="space-y-8">
-            <div v-for="plat in ['windows', 'linux', 'mac']" :key="plat" class="space-y-4">
+          <div v-if="releaseTab === 'packages'" class="space-y-8">
+            <div class="card p-4 bg-serble-dark/40 border border-serble-border space-y-4">
               <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <Monitor v-if="plat === 'windows'" class="w-6 h-6" />
-                  <Terminal v-if="plat === 'linux'" class="w-6 h-6" />
-                  <Apple v-if="plat === 'mac'" class="w-6 h-6" />
-                  <h4 class="font-bold capitalize">{{ plat }} Release</h4>
+                <div>
+                  <h4 class="font-bold">Live Releases</h4>
+                  <p class="text-xs text-serble-text-muted">Select which package is live per platform.</p>
                 </div>
-                <span v-if="managingGame[plat + 'Build']" class="text-xs text-green-500 flex items-center">
-                  <Check class="w-3 h-3 mr-1" /> Current Build: {{ managingGame[plat + 'Build'].substring(0, 8) }}...
-                </span>
-                <span v-else class="text-xs text-serble-text-muted italic">No build uploaded</span>
-              </div>
-              
-              <div class="flex items-center space-x-4">
-                <input type="file" :id="'file-' + plat" class="hidden" @change="e => handleFileChange(plat, e)">
-                <label :for="'file-' + plat" class="btn btn-outline text-sm cursor-pointer flex items-center">
-                  <Upload class="w-4 h-4 mr-2" /> Select File
-                </label>
-                <button 
-                  @click="uploadRelease(plat)" 
-                  :disabled="uploading === plat || !selectedFiles[plat]" 
-                  class="btn btn-primary text-sm"
-                >
-                  {{ uploading === plat ? 'Uploading...' : 'Upload Build' }}
+                <button @click="saveLiveReleases" :disabled="savingReleases" class="btn btn-primary btn-sm">
+                  {{ savingReleases ? 'Saving...' : 'Save Live Releases' }}
                 </button>
-                <span v-if="selectedFiles[plat]" class="text-xs text-serble-text-muted truncate max-w-[200px]">
-                  {{ selectedFiles[plat].name }}
-                </span>
               </div>
-              <div v-if="uploadStatus[plat]" :class="uploadStatus[plat].error ? 'text-red-500' : 'text-green-500'" class="text-xs">
-                {{ uploadStatus[plat].msg }}
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div v-for="plat in ['windows', 'linux', 'mac']" :key="plat" class="space-y-2">
+                  <div class="flex items-center space-x-2">
+                    <Monitor v-if="plat === 'windows'" class="w-4 h-4" />
+                    <Terminal v-if="plat === 'linux'" class="w-4 h-4" />
+                    <Apple v-if="plat === 'mac'" class="w-4 h-4" />
+                    <span class="text-sm font-medium capitalize">{{ plat }}</span>
+                  </div>
+                  <select v-model="releaseSelection[plat]" class="input text-sm">
+                    <option value="">Select package...</option>
+                    <option v-for="pkg in packagesForPlatform(plat)" :key="pkg.id" :value="pkg.id">
+                      {{ pkg.name }} ({{ pkg.id.substring(0, 8) }})
+                    </option>
+                  </select>
+                  <p v-if="managingGame[plat + 'Release']" class="text-[10px] text-serble-text-muted">
+                    Current: {{ managingGame[plat + 'Release'].substring(0, 8) }}...
+                  </p>
+                  <p v-else class="text-[10px] text-serble-text-muted italic">No live package set.</p>
+                  <p v-if="packagesForPlatform(plat).length === 0" class="text-[10px] text-serble-text-muted italic">No packages for this platform yet.</p>
+                </div>
               </div>
+            </div>
+
+            <div class="card p-4 bg-serble-dark/40 border border-serble-border space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold">Create Package</h4>
+                <span class="text-[10px] text-serble-text-muted">Unlimited packages supported.</span>
+              </div>
+              <form @submit.prevent="createPackage" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-1">
+                    <label class="text-xs text-serble-text-muted">Package Name</label>
+                    <input v-model="packageForm.name" type="text" required class="input text-sm" placeholder="v1.0.0">
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs text-serble-text-muted">Platform</label>
+                    <select v-model="packageForm.platform" class="input text-sm">
+                      <option value="windows">Windows</option>
+                      <option value="linux">Linux</option>
+                      <option value="mac">MacOS</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-1">
+                    <label class="text-xs text-serble-text-muted">Main Binary</label>
+                    <input v-model="packageForm.mainBinary" type="text" required class="input text-sm" placeholder="Game.exe">
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs text-serble-text-muted">Launch Arguments</label>
+                    <input v-model="packageForm.launchArguments" type="text" class="input text-sm" placeholder="--fullscreen">
+                  </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                  <input type="file" id="package-file" class="hidden" @change="handlePackageFileChange">
+                  <label for="package-file" class="btn btn-outline text-sm cursor-pointer flex items-center">
+                    <Upload class="w-4 h-4 mr-2" /> Select Package File
+                  </label>
+                  <span v-if="packageFile" class="text-xs text-serble-text-muted truncate max-w-[220px]">
+                    {{ packageFile.name }}
+                  </span>
+                </div>
+                <div v-if="packageStatus" :class="packageStatus.error ? 'text-red-500' : 'text-green-500'" class="text-xs">
+                  {{ packageStatus.msg }}
+                </div>
+                <div class="flex justify-end">
+                  <button type="submit" :disabled="creatingPackage" class="btn btn-primary btn-sm">
+                    {{ creatingPackage ? 'Creating...' : 'Create Package' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold">All Packages</h4>
+                <button @click="fetchPackages" :disabled="packagesLoading" class="btn btn-outline btn-sm">
+                  {{ packagesLoading ? 'Refreshing...' : 'Refresh' }}
+                </button>
+              </div>
+              <div v-if="packagesLoading" class="text-sm text-serble-text-muted">Loading packages...</div>
+              <div v-else-if="packages.length > 0" class="space-y-2">
+                <div v-for="pkg in packages" :key="pkg.id" class="card p-4 flex flex-col gap-2 bg-serble-dark/50">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                      <span class="font-bold">{{ pkg.name }}</span>
+                      <span class="text-[10px] uppercase border border-serble-border px-1 rounded">{{ pkg.platform }}</span>
+                    </div>
+                    <span class="text-[10px] text-serble-text-muted">ID: {{ pkg.id }}</span>
+                  </div>
+                  <div class="text-xs text-serble-text-muted">
+                    <span class="mr-4">Main: {{ pkg.mainBinary }}</span>
+                    <span v-if="pkg.launchArguments">Args: {{ pkg.launchArguments }}</span>
+                    <span v-else class="italic">No launch args</span>
+                  </div>
+                  <div class="text-[10px] text-serble-text-muted">Created {{ new Date(pkg.createdAt).toLocaleString() }}</div>
+                </div>
+              </div>
+              <p v-else class="text-center py-6 text-serble-text-muted italic">No packages uploaded yet.</p>
             </div>
           </div>
 
@@ -169,25 +245,28 @@
             </div>
 
             <div v-if="achievements.length > 0" class="space-y-4">
-              <div v-for="ach in achievements" :key="ach.id" class="card p-4 flex items-center justify-between bg-serble-dark/50">
-                <div class="flex items-center space-x-4">
-                  <div class="w-12 h-12 rounded bg-serble-card border border-serble-border overflow-hidden shrink-0">
-                    <img :src="`http://localhost:5240/game/achievement/${ach.id}/icon`" class="w-full h-full object-cover" @error="(e) => e.target.src = '/serble_logo.png'" />
-                  </div>
-                  <div>
-                    <div class="flex items-center space-x-2">
-                      <h5 class="font-bold">{{ ach.title }}</h5>
-                      <span v-if="ach.hidden" class="text-[8px] uppercase border border-yellow-500 text-yellow-500 px-1 rounded">Hidden</span>
+              <div v-for="ach in achievements" :key="ach.id" class="card p-4 flex flex-col gap-3 bg-serble-dark/50">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-4 flex-1 min-w-0">
+                    <div class="w-12 h-12 rounded bg-serble-card border border-serble-border overflow-hidden shrink-0">
+                      <img :src="`http://localhost:5240/game/achievement/${ach.id}/icon`" class="w-full h-full object-cover" @error="(e) => e.target.src = '/serble_logo.png'" />
                     </div>
-                    <p class="text-xs text-serble-text-muted line-clamp-1">{{ ach.description }}</p>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center space-x-2">
+                        <h5 class="font-bold">{{ ach.title }}</h5>
+                        <span v-if="ach.hidden" class="text-[8px] uppercase border border-yellow-500 text-yellow-500 px-1 rounded shrink-0">Hidden</span>
+                      </div>
+                      <p class="text-xs text-serble-text-muted line-clamp-1">{{ ach.description }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2 shrink-0">
+                    <button @click="openAchievementModal(ach)" class="btn btn-outline p-1.5"><Edit2 class="w-3.5 h-3.5" /></button>
+                    <button @click="deleteAchievement(ach.id)" class="btn btn-outline p-1.5 hover:bg-red-600 hover:border-red-600 group">
+                      <Trash2 class="w-3.5 h-3.5 group-hover:text-white" />
+                    </button>
                   </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                  <button @click="openAchievementModal(ach)" class="btn btn-outline p-1.5"><Edit2 class="w-3.5 h-3.5" /></button>
-                  <button @click="deleteAchievement(ach.id)" class="btn btn-outline p-1.5 hover:bg-red-600 hover:border-red-600 group">
-                    <Trash2 class="w-3.5 h-3.5 group-hover:text-white" />
-                  </button>
-                </div>
+                <div class="text-[10px] text-serble-text-muted font-mono break-all">ID: {{ ach.id }}</div>
               </div>
             </div>
             <p v-else class="text-center py-8 text-serble-text-muted italic">No achievements created for this game.</p>
@@ -243,7 +322,7 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
-import { Plus, Edit2, Trash2, X, Upload, Monitor, Terminal, Apple, Check, Image as ImageIcon } from 'lucide-vue-next';
+import { Plus, Edit2, Trash2, X, Upload, Monitor, Terminal, Apple, Image as ImageIcon } from 'lucide-vue-next';
 import client from '../api/client';
 
 const games = ref([]);
@@ -252,12 +331,16 @@ const showModal = ref(false);
 const saving = ref(false);
 const editingId = ref(null);
 const managingGame = ref(null);
-const uploading = ref(null);
-const selectedFiles = reactive({});
-const uploadStatus = reactive({});
+const packages = ref([]);
+const packagesLoading = ref(false);
+const creatingPackage = ref(false);
+const packageFile = ref(null);
+const packageStatus = ref(null);
+const releaseSelection = reactive({ windows: '', linux: '', mac: '' });
+const savingReleases = ref(false);
 const selectedIcon = ref(null);
 const iconRefreshTag = ref(Date.now());
-const releaseTab = ref('releases');
+const releaseTab = ref('packages');
 const achievements = ref([]);
 const showAchievementModal = ref(false);
 const savingAchievement = ref(false);
@@ -278,6 +361,13 @@ const form = reactive({
   publishDate: null,
   trailerVideo: '',
   public: false
+});
+
+const packageForm = reactive({
+  name: '',
+  platform: 'windows',
+  mainBinary: '',
+  launchArguments: ''
 });
 
 const fetchCreatedGames = async () => {
@@ -370,14 +460,33 @@ const deleteGame = async (game) => {
 
 const openReleaseManager = async (game) => {
   managingGame.value = game;
-  selectedFiles.windows = null;
-  selectedFiles.linux = null;
-  selectedFiles.mac = null;
-  uploadStatus.windows = null;
-  uploadStatus.linux = null;
-  uploadStatus.mac = null;
-  releaseTab.value = 'releases';
-  await fetchAchievements();
+  packageFile.value = null;
+  packageStatus.value = null;
+  releaseTab.value = 'packages';
+  syncReleaseSelection();
+  await Promise.all([fetchPackages(), fetchAchievements()]);
+};
+
+const fetchPackages = async () => {
+  if (!managingGame.value) return;
+  packagesLoading.value = true;
+  try {
+    const res = await client.get(`/game/${managingGame.value.id}/package`);
+    packages.value = res.data;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    packagesLoading.value = false;
+  }
+};
+
+const packagesForPlatform = (platform) => packages.value.filter(pkg => pkg.platform === platform);
+
+const syncReleaseSelection = () => {
+  if (!managingGame.value) return;
+  releaseSelection.windows = managingGame.value.windowsRelease || '';
+  releaseSelection.linux = managingGame.value.linuxRelease || '';
+  releaseSelection.mac = managingGame.value.macRelease || '';
 };
 
 const fetchAchievements = async () => {
@@ -387,6 +496,37 @@ const fetchAchievements = async () => {
     achievements.value = res.data;
   } catch (e) {
     console.error(e);
+  }
+};
+
+const saveLiveReleases = async () => {
+  if (!managingGame.value) return;
+  savingReleases.value = true;
+
+  try {
+    const payload = {};
+    if (releaseSelection.windows && releaseSelection.windows !== managingGame.value.windowsRelease) {
+      payload.windowsRelease = releaseSelection.windows;
+    }
+    if (releaseSelection.linux && releaseSelection.linux !== managingGame.value.linuxRelease) {
+      payload.linuxRelease = releaseSelection.linux;
+    }
+    if (releaseSelection.mac && releaseSelection.mac !== managingGame.value.macRelease) {
+      payload.macRelease = releaseSelection.mac;
+    }
+
+    if (Object.keys(payload).length === 0) {
+      savingReleases.value = false;
+      return;
+    }
+
+    const res = await client.patch(`/game/${managingGame.value.id}`, payload);
+    managingGame.value = res.data;
+    await fetchCreatedGames();
+  } catch (e) {
+    alert(e.response?.data || 'Failed to save live releases');
+  } finally {
+    savingReleases.value = false;
   }
 };
 
@@ -451,43 +591,52 @@ const deleteAchievement = async (id) => {
   }
 };
 
-const handleFileChange = (platform, event) => {
-  selectedFiles[platform] = event.target.files[0];
+const handlePackageFileChange = (e) => {
+  packageFile.value = e.target.files[0];
 };
 
-const uploadRelease = async (platform) => {
-  const file = selectedFiles[platform];
-  if (!file) return;
+const createPackage = async () => {
+  if (!managingGame.value) return;
+  if (!packageFile.value) {
+    packageStatus.value = { msg: 'Please select a package file to upload.', error: true };
+    return;
+  }
 
-  uploading.value = platform;
-  uploadStatus[platform] = { msg: 'Requesting upload URL...', error: false };
+  creatingPackage.value = true;
+  packageStatus.value = { msg: 'Creating package...', error: false };
 
   try {
-    // 1. Get pre-signed URL
-    const res = await client.post(`/game/${managingGame.value.id}/release/${platform}`);
-    const uploadUrl = res.data;
+    const request = {
+      name: packageForm.name,
+      gameId: managingGame.value.id,
+      platform: packageForm.platform,
+      mainBinary: packageForm.mainBinary,
+      launchArguments: packageForm.launchArguments || ''
+    };
 
-    uploadStatus[platform] = { msg: `Uploading ${file.name}...`, error: false };
+    const res = await client.post(`/game/${managingGame.value.id}/package`, request);
+    const uploadUrl = res.data.uploadUrl;
 
-    // 2. PUT to S3
+    packageStatus.value = { msg: `Uploading ${packageFile.value.name}...`, error: false };
+
     await fetch(uploadUrl, {
       method: 'PUT',
-      body: file,
+      body: packageFile.value,
       headers: { 'Content-Type': 'application/octet-stream' }
     });
 
-    uploadStatus[platform] = { msg: 'Upload successful!', error: false };
-    selectedFiles[platform] = null;
-    
-    // Refresh the local game object to show the new build ID
-    const refreshRes = await client.get('/game/created');
-    games.value = refreshRes.data;
-    managingGame.value = games.value.find(g => g.id === managingGame.value.id);
+    packageStatus.value = { msg: 'Package uploaded successfully!', error: false };
+    packageFile.value = null;
+    packageForm.name = '';
+    packageForm.mainBinary = '';
+    packageForm.launchArguments = '';
+
+    await fetchPackages();
   } catch (e) {
     console.error(e);
-    uploadStatus[platform] = { msg: 'Upload failed: ' + e.message, error: true };
+    packageStatus.value = { msg: e.response?.data || 'Package upload failed', error: true };
   } finally {
-    uploading.value = null;
+    creatingPackage.value = false;
   }
 };
 

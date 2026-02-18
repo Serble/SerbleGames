@@ -64,6 +64,22 @@ expand_margin_top = 10.0
 expand_margin_right = 10.0
 expand_margin_bottom = 10.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mihib"]
+bg_color = Color(0.078431375, 0.12941177, 0.13725491, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.05490196, 0.24705882, 0.17254902, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+expand_margin_left = 10.0
+expand_margin_top = 10.0
+expand_margin_right = 10.0
+expand_margin_bottom = 10.0
+
 [sub_resource type="StyleBoxLine" id="StyleBoxLine_wvktn"]
 content_margin_left = 4.0
 content_margin_top = 0.0
@@ -127,6 +143,8 @@ Button/styles/normal = SubResource("StyleBoxFlat_e1x85")
 Button/styles/pressed = SubResource("StyleBoxFlat_cjfk0")
 DangerButton/base_type = &"Button"
 DangerButton/styles/normal = SubResource("StyleBoxFlat_110ce")
+GrantedAchievement/base_type = &"Panel"
+GrantedAchievement/styles/panel = SubResource("StyleBoxFlat_mihib")
 HSeparator/styles/separator = SubResource("StyleBoxLine_wvktn")
 Panel/styles/panel = SubResource("StyleBoxFlat_vj6dk")
 PrimaryButton/base_type = &"Button"

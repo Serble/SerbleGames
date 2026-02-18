@@ -9,6 +9,7 @@ public class GamesDatabaseContext : DbContext {
     public DbSet<GameOwnership> GameOwnerships { get; set; }
     public DbSet<Achievement> Achievements { get; set; }
     public DbSet<UserAchievement> UserAchievements { get; set; }
+    public DbSet<Package> Packages { get; set; }
     
     public GamesDatabaseContext(DbContextOptions<GamesDatabaseContext> options) : base(options) { }
 }

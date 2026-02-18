@@ -14,8 +14,10 @@ namespace SerbleGames.Backend.Routes;
 [Route("/game")]
 [ApiController]
 [Authorize]
-public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> s3Settings) : ControllerBase {
+public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3, IOptions<S3Settings> s3Settings) : ControllerBase {
     private readonly S3Settings _s3Settings = s3Settings.Value;
+    
+    private static readonly string[] ValidPlatforms = ["windows", "linux", "mac"];
     
     [HttpPost]
     public async Task<ActionResult<Game>> Post(GameCreateRequest request) {
@@ -62,6 +64,29 @@ public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> 
         if (request.TrailerVideo != null) game.TrailerVideo = request.TrailerVideo;
         if (request.Public != null) game.Public = request.Public.Value;
         if (request.Icon != null) game.Icon = request.Icon;
+        if (request.WindowsRelease != null) {
+            Package? package = await packages.GetPackageById(request.WindowsRelease);
+            if (package == null || package.GameId != id) {
+                return BadRequest("Invalid Windows release package ID");
+            }
+            game.WindowsRelease = request.WindowsRelease;
+        }
+
+        if (request.LinuxRelease != null) {
+            Package? package = await packages.GetPackageById(request.LinuxRelease);
+            if (package == null || package.GameId != id) {
+                return BadRequest("Invalid Linux release package ID");
+            }
+            game.LinuxRelease = request.LinuxRelease;
+        }
+
+        if (request.MacRelease != null) {
+            Package? package = await packages.GetPackageById(request.MacRelease);
+            if (package == null || package.GameId != id) {
+                return BadRequest("Invalid Mac release package ID");
+            }
+            game.MacRelease = request.MacRelease;
+        }
 
         await games.UpdateGame(game);
         return Ok(game);
@@ -146,6 +171,16 @@ public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> 
         return Ok(await games.GetPublicGames(offset, limit));
     }
 
+    [HttpGet("public/{id}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<Game>> GetPublicGame(string id) {
+        Game? game = await games.GetGameById(id);
+        if (game == null || !game.Public) {
+            return NotFound("Game not found");
+        }
+        return Ok(game);
+    }
+
     [HttpGet("search")]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<Game>>> Search([FromQuery] string query, [FromQuery] int offset = 0, [FromQuery] int limit = 10) {
@@ -159,8 +194,8 @@ public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> 
         return Ok(userGames.Where(g => g.Public));
     }
 
-    [HttpPost("{id}/release/{platform}")]
-    public async Task<ActionResult<string>> UpdateRelease(string id, string platform) {
+    [HttpPost("{id}/package")]
+    public async Task<ActionResult<PackageCreateResponse>> CreatePackage(string id, PackageCreateRequest request) {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) return Unauthorized();
 
@@ -169,25 +204,81 @@ public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> 
         if (game.OwnerId != userId) return Forbid();
 
         string buildId = Guid.NewGuid().ToString();
-        string key = $"{id}/{platform}/{buildId}";
+        string key = $"game/{id}/package/{buildId}";
 
-        switch (platform.ToLower()) {
-            case "linux": game.LinuxBuild = buildId; break;
-            case "windows": game.WindowsBuild = buildId; break;
-            case "mac": game.MacBuild = buildId; break;
-            default: return BadRequest("Invalid platform. Must be linux, windows, or mac.");
+        if (!ValidPlatforms.Contains(request.Platform)) {
+            return BadRequest("Invalid platform specified, must be one of: windows, linux, mac");
         }
 
-        await games.UpdateGame(game);
+        Package package = new() {
+            CreatedAt = DateTime.UtcNow,
+            GameId = id,
+            Platform = request.Platform,
+            MainBinary = request.MainBinary,
+            LaunchArguments = request.LaunchArguments,
+            Id = buildId,
+            Name = request.Name
+        };
+        await packages.CreatePackage(package);
 
-        GetPreSignedUrlRequest request = new() {
+        GetPreSignedUrlRequest signReq = new() {
             BucketName = _s3Settings.BucketName,
             Key = key,
             Verb = HttpVerb.PUT,
             Expires = DateTime.UtcNow.AddMinutes(_s3Settings.PresignExpiryMinutes)
         };
 
-        return Ok(await s3.GetPreSignedURLAsync(request));
+        return Ok(new PackageCreateResponse {
+            Package = package,
+            UploadUrl = await s3.GetPreSignedURLAsync(signReq)
+        });
+    }
+    
+    [HttpGet("{id}/package")]
+    public async Task<ActionResult<Package[]>> GetPackages(string id) {
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
+        Game? game = await games.GetGameById(id);
+        if (game == null) return NotFound("Game not found");
+        if (game.OwnerId != userId) return Forbid();
+
+        return Ok(await packages.GetPackagesByGameId(id));
+    }
+    
+    [HttpGet("{id}/package/{packageId}")]
+    public async Task<ActionResult<Package>> GetPackage(string id, string packageId) {
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
+        Game? game = await games.GetGameById(id);
+        if (game == null) return NotFound("Game not found");
+        if (game.OwnerId != userId) return Forbid();
+
+        Package? package = await packages.GetPackageById(packageId);
+        if (package == null || package.GameId != id) {
+            return NotFound("Package not found");
+        }
+
+        return Ok(package);
+    }
+    
+    [HttpDelete("{id}/package/{packageId}")]
+    public async Task<ActionResult<Package[]>> DeletePackage(string id, string packageId) {
+        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized();
+
+        Game? game = await games.GetGameById(id);
+        if (game == null) return NotFound("Game not found");
+        if (game.OwnerId != userId) return Forbid();
+        
+        Package? package = await packages.GetPackageById(packageId);
+        if (package == null || package.GameId != id) {
+            return NotFound("Package not found");
+        }
+        
+        await packages.DeletePackage(packageId);
+        return NoContent();
     }
 
     [HttpGet("{id}/download/{platform}")]
@@ -205,15 +296,14 @@ public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> 
         }
 
         string? buildId = platform.ToLower() switch {
-            "linux" => game.LinuxBuild,
-            "windows" => game.WindowsBuild,
-            "mac" => game.MacBuild,
+            "linux" => game.LinuxRelease,
+            "windows" => game.WindowsRelease,
+            "mac" => game.MacRelease,
             _ => null
         };
 
         if (buildId == null) return NotFound("No build found for this platform");
-
-        string key = $"{id}/{platform.ToLower()}/{buildId}";
+        string key = $"game/{id}/package/{buildId}";
 
         GetPreSignedUrlRequest request = new() {
             BucketName = _s3Settings.BucketName,
@@ -221,6 +311,14 @@ public class GameController(IGameRepo games, IAmazonS3 s3, IOptions<S3Settings> 
             Verb = HttpVerb.GET,
             Expires = DateTime.UtcNow.AddMinutes(_s3Settings.PresignExpiryMinutes)
         };
+        
+        // check if the file exists in S3 before returning the URL, otherwise return 404
+        try {
+            await s3.GetObjectMetadataAsync(_s3Settings.BucketName, key);
+        }
+        catch (AmazonS3Exception e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound) {
+            return NotFound("Build file not found");
+        }
 
         return Ok(await s3.GetPreSignedURLAsync(request));
     }

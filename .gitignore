@@ -17,4 +17,4 @@
 **/.env.test
 **/.env.production
 **/.env.*.local
-
+**/*.user

@@ -2,8 +2,15 @@
 
 [ext_resource type="Script" uid="uid://bmg4q4t7nqjvd" path="res://Menus/Main.cs" id="1_c6dsi"]
 [ext_resource type="Theme" uid="uid://csuaer3tvrtcm" path="res://theme.tres" id="2_g1ynm"]
-[ext_resource type="PackedScene" uid="uid://cpkou2vst8mms" path="res://Menus/Elements/game_store_entry.tscn" id="2_kait1"]
+[ext_resource type="Script" uid="uid://dbap0gqox0ty1" path="res://addons/markdownlabel/markdownlabel.gd" id="4_4rmie"]
 [ext_resource type="Texture2D" uid="uid://larhbdjdq81b" path="res://Assets/serble_logo.png" id="4_at1df"]
+[ext_resource type="Script" uid="uid://dcx7crs23nf4" path="res://addons/markdownlabel/header_formats/h1_format.gd" id="5_sxw03"]
+[ext_resource type="Script" uid="uid://d0sin64i4v3op" path="res://addons/markdownlabel/header_formats/h2_format.gd" id="6_8xl2e"]
+[ext_resource type="Script" uid="uid://dlok0dv1tq2bf" path="res://addons/markdownlabel/header_formats/h3_format.gd" id="7_mwnh3"]
+[ext_resource type="Script" uid="uid://bayuh2vafablg" path="res://addons/markdownlabel/header_formats/h4_format.gd" id="8_yy245"]
+[ext_resource type="Script" uid="uid://dfr1w7u3jgni3" path="res://addons/markdownlabel/header_formats/h5_format.gd" id="9_nj5yp"]
+[ext_resource type="Script" uid="uid://bsi6dexoofpe6" path="res://addons/markdownlabel/header_formats/h6_format.gd" id="10_p18m3"]
+[ext_resource type="PackedScene" uid="uid://bvhvpgphhq6ss" path="res://Menus/Elements/achievement.tscn" id="11_sxw03"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_fm8wd"]
 font_size = 37
@@ -46,8 +53,84 @@ font_color = Color(0, 0.76862746, 0.40392157, 1)
 font_size = 24
 font_color = Color(0.3137255, 0.34509805, 0.3764706, 1)
 
+[sub_resource type="LabelSettings" id="LabelSettings_mwnh3"]
+font_size = 24
+font_color = Color(0.9098039, 0.15686275, 0.16862746, 1)
+
+[sub_resource type="Resource" id="Resource_1wi15"]
+resource_local_to_scene = true
+script = ExtResource("5_sxw03")
+
+[sub_resource type="Resource" id="Resource_gsb83"]
+resource_local_to_scene = true
+script = ExtResource("6_8xl2e")
+
+[sub_resource type="Resource" id="Resource_jtcg6"]
+resource_local_to_scene = true
+script = ExtResource("7_mwnh3")
+
+[sub_resource type="Resource" id="Resource_rfg15"]
+resource_local_to_scene = true
+script = ExtResource("8_yy245")
+
+[sub_resource type="Resource" id="Resource_ye8hf"]
+resource_local_to_scene = true
+script = ExtResource("9_nj5yp")
+
+[sub_resource type="Resource" id="Resource_lotnv"]
+resource_local_to_scene = true
+script = ExtResource("10_p18m3")
+
+[sub_resource type="LabelSettings" id="LabelSettings_sxw03"]
+font_size = 26
+
+[sub_resource type="LabelSettings" id="LabelSettings_8xl2e"]
+font_size = 21
+font_color = Color(0.4509804, 0.49019608, 0.52156866, 1)
+
 [sub_resource type="LabelSettings" id="LabelSettings_iectu"]
 font_size = 83
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sxw03"]
+bg_color = Color(0.19076231, 0.19076234, 0.19076231, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.14901961, 0.1764706, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_at1df"]
+bg_color = Color(0.22768393, 0.26482967, 0.29734197, 1)
+border_color = Color(0.14901961, 0.1764706, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gs4mu"]
+bg_color = Color(0.18039216, 0.21176471, 0.23921569, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.14901961, 0.1764706, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_twlr3"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(1, 1, 1, 0.75)
+draw_center = false
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kait1"]
+bg_color = Color(0.9098039, 0.15686275, 0.16862746, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.14901961, 0.1764706, 0.2, 1)
 
 [node name="Main" type="Control" unique_id=1278571947]
 layout_mode = 3
@@ -82,6 +165,47 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
+[node name="VBoxContainer" type="VBoxContainer" parent="TabContainer/Library" unique_id=1422111913]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Library/VBoxContainer" unique_id=1945182410]
+layout_mode = 2
+theme_override_constants/margin_left = 256
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 256
+theme_override_constants/margin_bottom = 15
+
+[node name="LibraryGameSearchBar" type="LineEdit" parent="TabContainer/Library/VBoxContainer/MarginContainer" unique_id=1080568501]
+layout_mode = 2
+placeholder_text = "Search for games..."
+
+[node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Library/VBoxContainer" unique_id=1963016480]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer2" type="MarginContainer" parent="TabContainer/Library/VBoxContainer/ScrollContainer" unique_id=322529002]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 16
+
+[node name="LibraryGameEntries" type="GridContainer" parent="TabContainer/Library/VBoxContainer/ScrollContainer/MarginContainer2" unique_id=1027831405]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 3
+theme_override_constants/h_separation = 51
+theme_override_constants/v_separation = 51
+columns = 6
+
 [node name="Store" type="Control" parent="TabContainer" unique_id=1482881241]
 visible = false
 layout_mode = 2
@@ -102,27 +226,25 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 256
 theme_override_constants/margin_bottom = 20
 
-[node name="GameSearchBar" type="LineEdit" parent="TabContainer/Store/VBoxContainer/MarginContainer" unique_id=1456854440]
-unique_name_in_owner = true
+[node name="StoreGameSearchBar" type="LineEdit" parent="TabContainer/Store/VBoxContainer/MarginContainer" unique_id=1456854440]
 layout_mode = 2
 placeholder_text = "Search for games..."
 
 [node name="MarginContainer2" type="MarginContainer" parent="TabContainer/Store/VBoxContainer" unique_id=817568862]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/margin_left = 64
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 64
 theme_override_constants/margin_bottom = 16
 
-[node name="GameEntries" type="GridContainer" parent="TabContainer/Store/VBoxContainer/MarginContainer2" unique_id=18798129]
+[node name="StoreGameEntries" type="GridContainer" parent="TabContainer/Store/VBoxContainer/MarginContainer2" unique_id=18798129]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 4
 theme_override_constants/h_separation = 51
 theme_override_constants/v_separation = 51
 columns = 6
-
-[node name="GameEntry" parent="TabContainer/Store/VBoxContainer/MarginContainer2/GameEntries" unique_id=735870552 instance=ExtResource("2_kait1")]
-layout_mode = 2
 
 [node name="Profile" type="Control" parent="TabContainer" unique_id=166237090]
 visible = false
@@ -276,21 +398,27 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
+theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 16
 
-[node name="CurrentGameContent" type="VBoxContainer" parent="TabContainer/Game/Container" unique_id=1814838584]
+[node name="ScrollContainer" type="ScrollContainer" parent="TabContainer/Game/Container" unique_id=1509142681]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="CurrentGameContent" type="VBoxContainer" parent="TabContainer/Game/Container/ScrollContainer" unique_id=1814838584]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="TabContainer/Game/Container/CurrentGameContent" unique_id=1462482449]
+[node name="Header" type="HBoxContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent" unique_id=1462482449]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer" unique_id=1284104412]
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header" unique_id=1284104412]
 layout_mode = 2
 theme_override_constants/margin_right = 16
 
-[node name="CurrentGameIcon" type="TextureRect" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/MarginContainer" unique_id=1719271272]
+[node name="CurrentGameIcon" type="TextureRect" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/MarginContainer" unique_id=1719271272]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 2
@@ -298,35 +426,44 @@ texture = ExtResource("4_at1df")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Left" type="VBoxContainer" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer" unique_id=1569204930]
+[node name="Left" type="VBoxContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header" unique_id=1569204930]
 layout_mode = 2
 alignment = 1
 
-[node name="CurrentGameName" type="Label" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Left" unique_id=361964510]
+[node name="CurrentGameName" type="Label" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Left" unique_id=361964510]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Mouse Moves Food: The Game"
 label_settings = SubResource("LabelSettings_rsp4l")
 
-[node name="CurrentGameSubtext" type="Label" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Left" unique_id=164777902]
+[node name="CurrentGameSubtext" type="Label" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Left" unique_id=164777902]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Published on 17/02/2026"
 label_settings = SubResource("LabelSettings_hgvpo")
 
-[node name="Right" type="VBoxContainer" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer" unique_id=190582600]
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Left" unique_id=245374300]
+layout_mode = 2
+theme_override_constants/margin_top = 19
+
+[node name="CurrentGameBrowserOpen" type="Button" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Left/MarginContainer" unique_id=943823025]
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+text = "Open in Browser"
+
+[node name="Right" type="VBoxContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header" unique_id=190582600]
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 1
 
-[node name="CurrentGamePrice" type="Label" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right" unique_id=655918902]
+[node name="CurrentGamePrice" type="Label" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right" unique_id=655918902]
 unique_name_in_owner = true
 layout_mode = 2
 text = "$5.99"
 label_settings = SubResource("LabelSettings_gs4mu")
 horizontal_alignment = 2
 
-[node name="CurrentGameInLibrary" type="Label" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right" unique_id=1110539867]
+[node name="CurrentGameInLibrary" type="Label" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right" unique_id=1110539867]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -334,16 +471,23 @@ text = "In your library"
 label_settings = SubResource("LabelSettings_twlr3")
 horizontal_alignment = 2
 
-[node name="CurrentGamePlaytime" type="Label" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right" unique_id=30695143]
+[node name="CurrentGamePlaytime" type="Label" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right" unique_id=30695143]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "⏲ 0m"
 label_settings = SubResource("LabelSettings_4rmie")
 horizontal_alignment = 2
 
-[node name="CurrentGameAddToLibrary" type="MarginContainer" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right" unique_id=114924665]
+[node name="CurrentGameCompatibility" type="Label" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right" unique_id=1353285958]
 unique_name_in_owner = true
-visible = false
+layout_mode = 2
+text = "Doesn't Support Linux"
+label_settings = SubResource("LabelSettings_mwnh3")
+horizontal_alignment = 2
+
+[node name="CurrentGameAddToLibrary" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right" unique_id=114924665]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_constants/margin_left = 16
@@ -351,14 +495,14 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="AddToLibButton" type="Button" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right/CurrentGameAddToLibrary" unique_id=899906887]
+[node name="AddToLibButton" type="Button" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGameAddToLibrary" unique_id=899906887]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SuccessButton"
 theme_override_font_sizes/font_size = 24
 text = "Add to Library"
 
-[node name="CurrentGamePlay" type="MarginContainer" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right" unique_id=1687771766]
+[node name="CurrentGamePlay" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right" unique_id=1687771766]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -368,15 +512,40 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="PlayButton" type="Button" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right/CurrentGamePlay" unique_id=1961081533]
+[node name="CurrentGameNotRunningContainer" type="HBoxContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay" unique_id=1424854104]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="CurrentGamePlayButton" type="Button" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer" unique_id=1961081533]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SuccessButton"
 theme_override_font_sizes/font_size = 24
-text = "Play Game"
+text = "Play"
 
-[node name="CurrentGameInstall" type="MarginContainer" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right" unique_id=2093932105]
+[node name="MarginContainer" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer" unique_id=841082730]
+layout_mode = 2
+theme = ExtResource("2_g1ynm")
+theme_override_constants/margin_left = 26
+
+[node name="UninstallButton" type="Button" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer/MarginContainer" unique_id=199208847]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DangerButton"
+theme_override_font_sizes/font_size = 24
+text = "Uninstall"
+
+[node name="CurrentGameKillButton" type="Button" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay" unique_id=808733012]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"DangerButton"
+theme_override_font_sizes/font_size = 24
+text = "Force Close"
+
+[node name="CurrentGameInstall" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right" unique_id=2093932105]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_constants/margin_left = 16
@@ -384,11 +553,90 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="InstallButton" type="Button" parent="TabContainer/Game/Container/CurrentGameContent/HBoxContainer/Right/CurrentGameInstall" unique_id=1479281585]
+[node name="InstallButton" type="Button" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGameInstall" unique_id=1479281585]
 layout_mode = 2
 theme_type_variation = &"PrimaryButton"
 theme_override_font_sizes/font_size = 24
 text = "Install Game"
+
+[node name="Desc" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent" unique_id=1238057897]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HFlowContainer" type="HFlowContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc" unique_id=1510630229]
+layout_mode = 2
+
+[node name="Desc" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer" unique_id=431833484]
+custom_minimum_size = Vector2(512, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 12
+
+[node name="Panel" type="Panel" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer/Desc" unique_id=1988455366]
+layout_mode = 2
+
+[node name="CurrentGameDesc" type="RichTextLabel" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer/Desc" unique_id=907068623]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+script = ExtResource("4_4rmie")
+markdown_text = "hello world
+# Hello bigly
+*yesnt* **big bold**  
+yes hello
+yesnt"
+h1 = SubResource("Resource_1wi15")
+h2 = SubResource("Resource_gsb83")
+h3 = SubResource("Resource_jtcg6")
+h4 = SubResource("Resource_rfg15")
+h5 = SubResource("Resource_ye8hf")
+h6 = SubResource("Resource_lotnv")
+metadata/_custom_type_script = "uid://dbap0gqox0ty1"
+
+[node name="CurrentGameAchievementsPanel" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer" unique_id=1184799855]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(512, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 12
+
+[node name="Panel" type="Panel" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer/CurrentGameAchievementsPanel" unique_id=579184608]
+layout_mode = 2
+
+[node name="CurrentGameAchievementsContainer" type="VBoxContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer/CurrentGameAchievementsPanel" unique_id=1203726790]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer/CurrentGameAchievementsPanel/CurrentGameAchievementsContainer" unique_id=1564156589]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer/CurrentGameAchievementsPanel/CurrentGameAchievementsContainer/HBoxContainer" unique_id=1362509108]
+layout_mode = 2
+text = "🏆 Achievements"
+label_settings = SubResource("LabelSettings_sxw03")
+
+[node name="CurrentGameAchievementCount" type="Label" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer/CurrentGameAchievementsPanel/CurrentGameAchievementsContainer/HBoxContainer" unique_id=455571952]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 10
+text = "(3/7)"
+label_settings = SubResource("LabelSettings_8xl2e")
+horizontal_alignment = 2
+
+[node name="Achievement" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Desc/HFlowContainer/CurrentGameAchievementsPanel/CurrentGameAchievementsContainer" unique_id=272410748 instance=ExtResource("11_sxw03")]
+layout_mode = 2
 
 [node name="CurrentGameNoContent" type="CenterContainer" parent="TabContainer/Game/Container" unique_id=857200615]
 unique_name_in_owner = true
@@ -400,5 +648,48 @@ layout_mode = 2
 text = "Select a Game First"
 label_settings = SubResource("LabelSettings_iectu")
 
-[connection signal="text_submitted" from="TabContainer/Store/VBoxContainer/MarginContainer/GameSearchBar" to="." method="OnStoreSearchTextChanged"]
+[node name="HeaderButtons" type="HBoxContainer" parent="." unique_id=762576214]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -116.0
+offset_bottom = 26.0
+grow_horizontal = 0
+alignment = 2
+
+[node name="Reload" type="Button" parent="HeaderButtons" unique_id=31481195]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+tooltip_text = "Quit the launcher, this will prevent games the rely on it from working properly. Press the X to minimise the window and keep it running."
+theme_type_variation = &"DangerButton"
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_sxw03")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_at1df")
+theme_override_styles/hover = SubResource("StyleBoxFlat_gs4mu")
+theme_override_styles/focus = SubResource("StyleBoxFlat_twlr3")
+text = "Reload"
+
+[node name="Quit" type="Button" parent="HeaderButtons" unique_id=626347953]
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+tooltip_text = "Quit the launcher, this will prevent games the rely on it from working properly. Press the X to minimise the window and keep it running."
+theme_type_variation = &"DangerButton"
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_kait1")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_at1df")
+theme_override_styles/hover = SubResource("StyleBoxFlat_gs4mu")
+theme_override_styles/focus = SubResource("StyleBoxFlat_twlr3")
+text = "Quit"
+
+[connection signal="text_submitted" from="TabContainer/Library/VBoxContainer/MarginContainer/LibraryGameSearchBar" to="." method="OnLibrarySearchTextChanged"]
+[connection signal="text_submitted" from="TabContainer/Store/VBoxContainer/MarginContainer/StoreGameSearchBar" to="." method="OnStoreSearchTextChanged"]
 [connection signal="pressed" from="TabContainer/Profile/CenterContainer/VBoxContainer/Panel/VBoxContainer/LogoutSection/LogoutButton" to="." method="OnLogoutPressed"]
+[connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Left/MarginContainer/CurrentGameBrowserOpen" to="." method="OpenCurrentGameInBrowser"]
+[connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGameAddToLibrary/AddToLibButton" to="." method="AddCurrentGameToLibrary"]
+[connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer/CurrentGamePlayButton" to="." method="OnPlayPressed"]
+[connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer/MarginContainer/UninstallButton" to="." method="OnUninstallPressed"]
+[connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameKillButton" to="." method="OnKillPressed"]
+[connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGameInstall/InstallButton" to="." method="OnInstallPressed"]
+[connection signal="pressed" from="HeaderButtons/Reload" to="." method="Reload"]
+[connection signal="pressed" from="HeaderButtons/Quit" to="." method="Quit"]

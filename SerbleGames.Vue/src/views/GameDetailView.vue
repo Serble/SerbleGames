@@ -43,16 +43,16 @@
             </div>
           </div>
           <div class="flex flex-wrap gap-2 justify-center md:justify-end">
-            <button v-if="game.windowsBuild" @click="download('windows')" class="btn btn-outline flex items-center">
+            <button v-if="game.windowsRelease" @click="download('windows')" class="btn btn-outline flex items-center">
               <Download class="w-4 h-4 mr-2" /> Windows
             </button>
-            <button v-if="game.linuxBuild" @click="download('linux')" class="btn btn-outline flex items-center">
+            <button v-if="game.linuxRelease" @click="download('linux')" class="btn btn-outline flex items-center">
               <Download class="w-4 h-4 mr-2" /> Linux
             </button>
-            <button v-if="game.macBuild" @click="download('mac')" class="btn btn-outline flex items-center">
+            <button v-if="game.macRelease" @click="download('mac')" class="btn btn-outline flex items-center">
               <Download class="w-4 h-4 mr-2" /> macOS
             </button>
-            <p v-if="!game.windowsBuild && !game.linuxBuild && !game.macBuild" class="text-serble-text-muted italic">No builds available yet.</p>
+            <p v-if="!game.windowsRelease && !game.linuxRelease && !game.macRelease" class="text-serble-text-muted italic">No packages available yet.</p>
           </div>
         </div>
         <button v-else @click="purchase" :disabled="purchasing" class="btn btn-primary px-12 py-3 text-lg">
@@ -65,7 +65,7 @@
       <div class="lg:col-span-2 space-y-8">
         <div class="card p-8">
           <h2 class="text-2xl font-bold mb-4">About this game</h2>
-          <p class="whitespace-pre-wrap leading-relaxed">{{ game.description }}</p>
+          <MarkdownContent :content="game.description" />
         </div>
 
         <!-- Achievements Section -->
@@ -82,25 +82,28 @@
             <div 
               v-for="ach in visibleAchievements" 
               :key="ach.id" 
-              class="flex items-center space-x-4 p-4 rounded-lg border transition-colors relative"
+              class="flex flex-col p-4 rounded-lg border transition-colors relative"
               :class="isEarned(ach.id) ? 'bg-serble-primary/5 border-serble-primary/30' : 'bg-serble-dark/30 border-serble-border opacity-60'"
             >
               <div v-if="ach.hidden" class="absolute top-2 right-2" title="Hidden Achievement">
                 <EyeOff class="w-3 h-3 text-yellow-500/50" />
               </div>
-              <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-serble-border bg-serble-card">
-                <img 
-                  :src="`http://localhost:5240/game/achievement/${ach.id}/icon`" 
-                  class="w-full h-full object-cover"
-                  :class="{ 'grayscale': !isEarned(ach.id) }"
-                  alt="Achievement Icon"
-                  @error="(e) => e.target.src = '/serble_logo.png'"
-                />
+              <div class="flex items-center space-x-4 mb-2">
+                <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-serble-border bg-serble-card">
+                  <img 
+                    :src="`http://localhost:5240/game/achievement/${ach.id}/icon`" 
+                    class="w-full h-full object-cover"
+                    :class="{ 'grayscale': !isEarned(ach.id) }"
+                    alt="Achievement Icon"
+                    @error="(e) => e.target.src = '/serble_logo.png'"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h4 class="font-bold truncate" :class="{ 'text-serble-primary': isEarned(ach.id) }">{{ ach.title }}</h4>
+                  <p class="text-xs text-serble-text-muted line-clamp-2">{{ ach.description }}</p>
+                </div>
               </div>
-              <div class="min-w-0">
-                <h4 class="font-bold truncate" :class="{ 'text-serble-primary': isEarned(ach.id) }">{{ ach.title }}</h4>
-                <p class="text-xs text-serble-text-muted line-clamp-2">{{ ach.description }}</p>
-              </div>
+              <div class="text-[9px] text-serble-text-muted font-mono break-all">{{ ach.id }}</div>
             </div>
           </div>
         </div>
@@ -126,9 +129,9 @@
             <div class="flex justify-between">
               <span class="text-serble-text-muted">Platform</span>
               <span class="flex gap-2">
-                <Monitor v-if="game.windowsBuild" class="w-4 h-4" title="Windows" />
-                <Terminal v-if="game.linuxBuild" class="w-4 h-4" title="Linux" />
-                <Apple v-if="game.macBuild" class="w-4 h-4" title="macOS" />
+                <Monitor v-if="game.windowsRelease" class="w-4 h-4" title="Windows" />
+                <Terminal v-if="game.linuxRelease" class="w-4 h-4" title="Linux" />
+                <Apple v-if="game.macRelease" class="w-4 h-4" title="macOS" />
               </span>
             </div>
             <div class="flex justify-between">
@@ -152,6 +155,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Download, Monitor, Terminal, Apple, Trophy, EyeOff, Clock } from 'lucide-vue-next';
 import client from '../api/client';
+import MarkdownContent from '../components/MarkdownContent.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -185,12 +189,9 @@ const embedUrl = computed(() => {
 const fetchGame = async () => {
   loading.value = true;
   try {
-    const res = await client.get(`/game/public`);
-    const found = res.data.find(g => g.id === route.params.id);
-    if (found) {
-      game.value = found;
-      await Promise.all([fetchOwner(), checkOwnership(), fetchAchievements()]);
-    }
+    const res = await client.get(`/game/public/${route.params.id}`);
+    game.value = res.data;
+    await Promise.all([fetchOwner(), checkOwnership(), fetchAchievements()]);
   } catch (e) {
     console.error(e);
   } finally {
