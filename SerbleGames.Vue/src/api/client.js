@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:5240';
+const API_BASE = 'https://api.games.serble.net';
 
 const client = axios.create({
   baseURL: API_BASE,
