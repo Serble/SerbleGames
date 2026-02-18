@@ -51,10 +51,10 @@
         >
           <div class="aspect-video w-full overflow-hidden bg-serble-border/10">
             <img 
-              :src="`http://localhost:5240/game/${game.id}/icon`" 
+              :src="getGameIconUrl(game.id)" 
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               alt="Game Icon"
-              @error="(e) => e.target.src = '/serble_logo.png'"
+              :onError="(e) => e.target.src = DEFAULT_ICON_URL"
             />
           </div>
           <div class="p-6 flex-grow">
@@ -86,6 +86,7 @@ import { useRouter } from 'vue-router';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-vue-next';
 import client from '../api/client';
 import { markdownToPlainText } from '../utils/markdown.js';
+import { getGameIconUrl, DEFAULT_ICON_URL } from '../utils/icons.js';
 
 const router = useRouter();
 const games = ref([]);

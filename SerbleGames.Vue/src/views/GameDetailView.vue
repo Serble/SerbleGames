@@ -9,10 +9,10 @@
       <div class="flex flex-col md:flex-row gap-6 md:items-center">
         <div class="w-32 h-32 md:w-48 md:h-48 rounded-xl overflow-hidden shadow-2xl bg-serble-card border border-serble-border shrink-0">
           <img 
-            :src="`http://localhost:5240/game/${game.id}/icon`" 
+            :src="getGameIconUrl(game.id)" 
             class="w-full h-full object-cover"
             alt="Game Icon"
-            @error="(e) => e.target.src = '/serble_logo.png'"
+            :onError="(e) => e.target.src = DEFAULT_ICON_URL"
           />
         </div>
         <div class="space-y-2">
@@ -91,11 +91,11 @@
               <div class="flex items-center space-x-4 mb-2">
                 <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-serble-border bg-serble-card">
                   <img 
-                    :src="`http://localhost:5240/game/achievement/${ach.id}/icon`" 
+                    :src="getAchievementIconUrl(ach.id)" 
                     class="w-full h-full object-cover"
                     :class="{ 'grayscale': !isEarned(ach.id) }"
                     alt="Achievement Icon"
-                    @error="(e) => e.target.src = '/serble_logo.png'"
+                    :onError="(e) => e.target.src = DEFAULT_ICON_URL"
                   />
                 </div>
                 <div class="min-w-0 flex-1">
@@ -156,6 +156,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Download, Monitor, Terminal, Apple, Trophy, EyeOff, Clock } from 'lucide-vue-next';
 import client from '../api/client';
 import MarkdownContent from '../components/MarkdownContent.vue';
+import { getGameIconUrl, getAchievementIconUrl, DEFAULT_ICON_URL } from '../utils/icons.js';
 
 const route = useRoute();
 const router = useRouter();

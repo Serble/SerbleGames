@@ -55,10 +55,10 @@
               <div class="w-20 h-20 rounded-lg overflow-hidden bg-serble-dark border border-serble-border shrink-0">
                 <img 
                   v-if="editingId"
-                  :src="`http://localhost:5240/game/${editingId}/icon?t=` + iconRefreshTag" 
+                  :src="getGameIconUrl(editingId) + '?t=' + iconRefreshTag" 
                   class="w-full h-full object-cover"
                   alt="Current Icon"
-                  @error="(e) => e.target.src = '/serble_logo.png'"
+                  :onError="(e) => e.target.src = DEFAULT_ICON_URL"
                 />
                 <div v-else class="w-full h-full flex items-center justify-center text-serble-text-muted">
                   <ImageIcon class="w-8 h-8" />
@@ -249,7 +249,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-4 flex-1 min-w-0">
                     <div class="w-12 h-12 rounded bg-serble-card border border-serble-border overflow-hidden shrink-0">
-                      <img :src="`http://localhost:5240/game/achievement/${ach.id}/icon`" class="w-full h-full object-cover" @error="(e) => e.target.src = '/serble_logo.png'" />
+                      <img :src="getAchievementIconUrl(ach.id)" class="w-full h-full object-cover" :onError="(e) => e.target.src = DEFAULT_ICON_URL" />
                     </div>
                     <div class="min-w-0 flex-1">
                       <div class="flex items-center space-x-2">

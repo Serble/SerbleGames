@@ -39,7 +39,7 @@ public static class AuthManager {
 
     public static async Task<bool> Login() {
         try {
-            string token = await Client.LoginWithOAuth("78cc6fd3-1c04-4fe0-a8d4-485425be4977");
+            string token = await Client.LoginWithOAuth("3a41c262-81df-4dfb-b129-6a61f86fcb6f");
             if (string.IsNullOrEmpty(token)) {
                 throw new Exception("Received empty token from login");
             }

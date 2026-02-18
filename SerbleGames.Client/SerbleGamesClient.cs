@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace SerbleGames.Client;
 
-public class SerbleGamesClient(string baseUrl = "http://localhost:5240") {
+public class SerbleGamesClient(string baseUrl = "https://api.games.serble.net") {
     private readonly HttpClient _httpClient = new() { BaseAddress = new Uri(baseUrl) };
     private string? _accessToken;
 
