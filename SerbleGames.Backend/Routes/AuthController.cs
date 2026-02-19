@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SerbleGames.Backend.Auth;
 using SerbleGames.Backend.Database;
@@ -34,6 +35,10 @@ public class AuthController(IUserRepo users, ISerbleApiClient serbleApi, IJwtMan
             user.Username = info.Username;
             user.RefreshToken = tokenResponse.RefreshToken;
             await users.UpdateUser(user);
+        }
+
+        if (user.IsBanned) {
+            return StatusCode(StatusCodes.Status403Forbidden, "User is banned");
         }
 
         string backendToken = jwt.GenerateToken(user);

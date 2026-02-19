@@ -1,8 +1,17 @@
 <template>
   <div class="space-y-8">
     <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-bold">Developer Portal</h1>
-      <button @click="openCreateModal" class="btn btn-primary flex items-center">
+      <div>
+        <h1 class="text-3xl font-bold">Developer Portal</h1>
+        <p v-if="serverOptions" class="text-xs text-serble-text-muted mt-1">
+          Max games per user: {{ serverOptions.maxGamesPerUser > 0 ? serverOptions.maxGamesPerUser : 'Unlimited' }}
+          <span v-if="serverOptions.maxGamesPerUser > 0">(You have {{ games.length }})</span>
+        </p>
+        <p v-if="gameLimitReached" class="text-xs text-yellow-500 mt-1">
+          Game creation limit reached. Contact an admin to raise the limit.
+        </p>
+      </div>
+      <button @click="openCreateModal" :disabled="gameLimitReached" class="btn btn-primary flex items-center">
         <Plus class="w-4 h-4 mr-2" /> Create New Game
       </button>
     </div>
@@ -162,8 +171,13 @@
             <div class="card p-4 bg-serble-dark/40 border border-serble-border space-y-4">
               <div class="flex items-center justify-between">
                 <h4 class="font-bold">Create Package</h4>
-                <span class="text-[10px] text-serble-text-muted">Unlimited packages supported.</span>
+                <span class="text-[10px] text-serble-text-muted">
+                  Max builds per game: {{ serverOptions?.maxBuildsPerGame > 0 ? serverOptions.maxBuildsPerGame : 'Unlimited' }}
+                </span>
               </div>
+              <p v-if="buildLimitReached" class="text-xs text-yellow-500">
+                Build limit reached for this game. Delete an old build or contact an admin.
+              </p>
               <form @submit.prevent="createPackage" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-1">
@@ -202,7 +216,7 @@
                   {{ packageStatus.msg }}
                 </div>
                 <div class="flex justify-end">
-                  <button type="submit" :disabled="creatingPackage" class="btn btn-primary btn-sm">
+                  <button type="submit" :disabled="creatingPackage || buildLimitReached" class="btn btn-primary btn-sm">
                     {{ creatingPackage ? 'Creating...' : 'Create Package' }}
                   </button>
                 </div>
@@ -224,7 +238,17 @@
                       <span class="font-bold">{{ pkg.name }}</span>
                       <span class="text-[10px] uppercase border border-serble-border px-1 rounded">{{ pkg.platform }}</span>
                     </div>
-                    <span class="text-[10px] text-serble-text-muted">ID: {{ pkg.id }}</span>
+                    <div class="flex items-center gap-2">
+                      <span class="text-[10px] text-serble-text-muted">ID: {{ pkg.id }}</span>
+                      <button
+                        v-if="canDeletePackage(pkg)"
+                        @click="deletePackage(pkg)"
+                        class="btn btn-outline p-1.5 hover:bg-red-600 hover:border-red-600 group"
+                        title="Delete package"
+                      >
+                        <Trash2 class="w-3.5 h-3.5 group-hover:text-white" />
+                      </button>
+                    </div>
                   </div>
                   <div class="text-xs text-serble-text-muted">
                     <span class="mr-4">Main: {{ pkg.mainBinary }}</span>
@@ -321,9 +345,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
 import { Plus, Edit2, Trash2, X, Upload, Monitor, Terminal, Apple, Image as ImageIcon } from 'lucide-vue-next';
-import client from '../api/client';
+import client, { API_BASE } from '../api/client';
+const DEFAULT_ICON_URL = '/serble_logo.png';
 
 const games = ref([]);
 const loading = ref(true);
@@ -336,6 +361,7 @@ const packagesLoading = ref(false);
 const creatingPackage = ref(false);
 const packageFile = ref(null);
 const packageStatus = ref(null);
+const serverOptions = ref(null);
 const releaseSelection = reactive({ windows: '', linux: '', mac: '' });
 const savingReleases = ref(false);
 const selectedIcon = ref(null);
@@ -381,6 +407,31 @@ const fetchCreatedGames = async () => {
     loading.value = false;
   }
 };
+
+const fetchServerOptions = async () => {
+  try {
+    const res = await client.get('/options');
+    serverOptions.value = res.data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const getGameIconUrl = (gameId) => `${API_BASE}/game/${gameId}/icon`;
+const getAchievementIconUrl = (achievementId) => `${API_BASE}/game/achievement/${achievementId}/icon`;
+
+const gameLimitReached = computed(() => {
+  if (!serverOptions.value) return false;
+  const limit = serverOptions.value.maxGamesPerUser || 0;
+  return limit > 0 && games.value.length >= limit;
+});
+
+const buildLimitReached = computed(() => {
+  if (!serverOptions.value) return false;
+  if (!managingGame.value) return false;
+  const limit = serverOptions.value.maxBuildsPerGame || 0;
+  return limit > 0 && packages.value.length >= limit;
+});
 
 const openCreateModal = () => {
   editingId.value = null;
@@ -597,6 +648,10 @@ const handlePackageFileChange = (e) => {
 
 const createPackage = async () => {
   if (!managingGame.value) return;
+  if (buildLimitReached.value) {
+    packageStatus.value = { msg: 'Build limit reached for this game.', error: true };
+    return;
+  }
   if (!packageFile.value) {
     packageStatus.value = { msg: 'Please select a package file to upload.', error: true };
     return;
@@ -640,5 +695,29 @@ const createPackage = async () => {
   }
 };
 
-onMounted(fetchCreatedGames);
+const canDeletePackage = (pkg) => {
+  if (!managingGame.value) return false;
+  const liveIds = [
+    managingGame.value.windowsRelease,
+    managingGame.value.linuxRelease,
+    managingGame.value.macRelease
+  ];
+  return !liveIds.includes(pkg.id);
+};
+
+const deletePackage = async (pkg) => {
+  if (!managingGame.value) return;
+  if (!confirm(`Delete package "${pkg.name}"? This cannot be undone.`)) return;
+
+  try {
+    await client.delete(`/game/${managingGame.value.id}/package/${pkg.id}`);
+    await fetchPackages();
+  } catch (e) {
+    alert(e.response?.data || 'Failed to delete package');
+  }
+};
+
+onMounted(async () => {
+  await Promise.all([fetchCreatedGames(), fetchServerOptions()]);
+});
 </script>

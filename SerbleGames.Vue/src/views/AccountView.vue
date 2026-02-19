@@ -15,10 +15,27 @@
         <div>
           <h2 class="text-2xl font-bold">{{ user.username }}</h2>
           <p class="text-serble-text-muted">User ID: {{ user.id }}</p>
+          <p v-if="user.isAdmin" class="text-xs mt-2 inline-flex items-center rounded border border-serble-primary/60 px-2 py-0.5 text-serble-primary">
+            Admin
+          </p>
         </div>
       </div>
       
       <div class="p-8 space-y-6">
+        <div v-if="user.permissions?.length" class="space-y-2">
+          <h3 class="font-semibold">Permissions</h3>
+          <div class="flex flex-wrap gap-2">
+            <span v-for="perm in user.permissions" :key="perm" class="text-xs border border-serble-border px-2 py-1 rounded">
+              {{ perm }}
+            </span>
+          </div>
+        </div>
+
+        <div v-if="user.isAdmin" class="space-y-2">
+          <h3 class="font-semibold">Admin Tools</h3>
+          <button @click="goToAdmin" class="btn btn-outline">Open Admin Console</button>
+        </div>
+
         <div class="space-y-2">
           <h3 class="font-semibold">Linked Serble Account</h3>
           <p class="text-serble-text-muted text-sm">Your account is linked with Serble. Your username and profile information are managed there.</p>
@@ -55,6 +72,10 @@ const fetchUser = async () => {
 const logout = () => {
   localStorage.removeItem('backend_token');
   window.location.href = '/';
+};
+
+const goToAdmin = () => {
+  router.push({ name: 'admin' });
 };
 
 onMounted(fetchUser);

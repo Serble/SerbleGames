@@ -19,6 +19,10 @@ public class GameRepo(GamesDatabaseContext context) : IGameRepo {
         return await context.Games.Where(g => g.OwnerId == ownerId).ToListAsync();
     }
 
+    public async Task<int> CountGamesByOwnerId(string ownerId) {
+        return await context.Games.CountAsync(g => g.OwnerId == ownerId);
+    }
+
     public async Task<IEnumerable<Game>> GetOwnedGamesByUserId(string userId) {
         return await context.GameOwnerships
             .Where(o => o.UserId == userId)

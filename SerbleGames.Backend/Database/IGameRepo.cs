@@ -6,6 +6,7 @@ public interface IGameRepo {
     Task<Game> CreateGame(Game game);
     Task<Game?> GetGameById(string id);
     Task<IEnumerable<Game>> GetGamesByOwnerId(string ownerId);
+    Task<int> CountGamesByOwnerId(string ownerId);
     Task<IEnumerable<Game>> GetOwnedGamesByUserId(string userId);
     Task UpdateGame(Game game);
     Task DeleteGame(string id);

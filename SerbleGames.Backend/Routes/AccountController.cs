@@ -24,7 +24,8 @@ public class AccountController(IUserRepo users) : ControllerBase {
             return NotFound("User not found in local database");
         }
         
-        return Ok(new UserAccountResponse(user.Id, user.Username));
+        string[] permissions = user.Permissions.Select(p => p.Permission).ToArray();
+        return Ok(new UserAccountResponse(user.Id, user.Username, user.IsAdmin, user.IsBanned, permissions));
     }
 
     [HttpGet("{id}")]

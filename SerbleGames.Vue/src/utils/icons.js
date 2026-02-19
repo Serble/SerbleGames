@@ -1,9 +1,11 @@
+import API_BASE from '../api/client.js';
+
 /**
  * Get the base API URL based on the current window location
  * Works in both dev (localhost:5173) and prod environments
  */
 export function getApiBaseUrl() {
-  return "https://api.games.serble.net";
+  return API_BASE;
   // if (typeof window === 'undefined') {
   //   return 'http://localhost:5240'; // fallback for SSR
   // }

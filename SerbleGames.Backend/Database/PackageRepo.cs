@@ -18,6 +18,10 @@ public class PackageRepo(GamesDatabaseContext context) : IPackageRepo {
         return await context.Packages.Where(p => p.GameId == gameId).ToArrayAsync();
     }
 
+    public async Task<int> CountPackagesByGameId(string gameId) {
+        return await context.Packages.CountAsync(p => p.GameId == gameId);
+    }
+
     public async Task UpdatePackage(Package package) {
         context.Entry(package).State = EntityState.Modified;
         await context.SaveChangesAsync();

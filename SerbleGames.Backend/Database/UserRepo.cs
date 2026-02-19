@@ -12,11 +12,15 @@ public class UserRepo(GamesDatabaseContext context) : IUserRepo {
     }
 
     public async Task<GamesUser?> GetUserById(string id) { 
-        return await context.Users.FindAsync(id);
+        return await context.Users
+            .Include(u => u.Permissions)
+            .FirstOrDefaultAsync(u => u.Id == id);
     }
     
     public async Task<GamesUser?> GetUserByUsername(string username) {
-        return await context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        return await context.Users
+            .Include(u => u.Permissions)
+            .FirstOrDefaultAsync(u => u.Username == username);
     }
     
     public async Task UpdateRefreshToken(string id, string refreshToken) {

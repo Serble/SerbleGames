@@ -14,7 +14,7 @@ namespace SerbleGames.Backend.Routes;
 [Route("/game")]
 [ApiController]
 [Authorize]
-public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3, IOptions<S3Settings> s3Settings) : ControllerBase {
+public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3, IOptions<S3Settings> s3Settings, IUserRepo users, IAdminRepo adminRepo) : ControllerBase {
     private readonly S3Settings _s3Settings = s3Settings.Value;
     
     private static readonly string[] ValidPlatforms = ["windows", "linux", "mac"];
@@ -23,6 +23,28 @@ public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3
     public async Task<ActionResult<Game>> Post(GameCreateRequest request) {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId == null) return Unauthorized();
+
+        GamesUser? user = await users.GetUserById(userId);
+        if (user == null) return Unauthorized();
+
+        ServerOptions options = await adminRepo.GetServerOptions();
+
+        if (!user.IsAdmin) {
+            if (options.RequireCreateWhitelist && !await adminRepo.IsUserWhitelisted(userId, WhitelistTypes.CreateGames)) {
+                return StatusCode(StatusCodes.Status403Forbidden, "User is not whitelisted to create games");
+            }
+
+            if (request.Price > 0 && options.RequirePaidCreateWhitelist && !await adminRepo.IsUserWhitelisted(userId, WhitelistTypes.CreatePaidGames)) {
+                return StatusCode(StatusCodes.Status403Forbidden, "User is not whitelisted to create paid games");
+            }
+        }
+
+        if (options.MaxGamesPerUser > 0) {
+            int currentCount = await adminRepo.CountGamesByUser(userId);
+            if (currentCount >= options.MaxGamesPerUser) {
+                return BadRequest("Game creation limit reached");
+            }
+        }
 
         if (!string.IsNullOrEmpty(request.TrailerVideo) && !request.TrailerVideo.Contains("youtube.com") && !request.TrailerVideo.Contains("youtu.be")) {
             return BadRequest("Trailer video must be a YouTube link");
@@ -101,6 +123,29 @@ public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3
         if (game == null) return NotFound("Game not found");
 
         if (game.OwnerId != userId) return Forbid();
+        
+        // first delete all its packages from db and s3
+        IEnumerable<Package> gamePackages = await packages.GetPackagesByGameId(id);
+        foreach (Package package in gamePackages) {
+            await DeletePackageData(package);
+        }
+        
+        // then delete the achievements and their icons
+        IEnumerable<Achievement> achievements = await games.GetAchievementsByGameId(id);
+        foreach (Achievement achievement in achievements) {
+            await DeleteAchievementData(achievement);
+        }
+        
+        // then delete the game icon if it exists
+        if (game.Icon != null) {
+            string key = $"{id}/icon/{game.Icon}";
+            try {
+                await s3.DeleteObjectAsync(_s3Settings.BucketName, key);
+            }
+            catch (AmazonS3Exception e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound) {
+                // Ignore if the file is not found
+            }
+        }
 
         await games.DeleteGame(id);
         return NoContent();
@@ -203,6 +248,17 @@ public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3
         if (game == null) return NotFound("Game not found");
         if (game.OwnerId != userId) return Forbid();
 
+        GamesUser? user = await users.GetUserById(userId);
+        if (user == null) return Unauthorized();
+
+        ServerOptions options = await adminRepo.GetServerOptions();
+        if (!user.IsAdmin && options.MaxBuildsPerGame > 0) {
+            int buildCount = await adminRepo.CountPackagesByGame(id);
+            if (buildCount >= options.MaxBuildsPerGame) {
+                return BadRequest("Build limit reached for this game");
+            }
+        }
+
         string buildId = Guid.NewGuid().ToString();
         string key = $"game/{id}/package/{buildId}";
 
@@ -277,8 +333,19 @@ public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3
             return NotFound("Package not found");
         }
         
-        await packages.DeletePackage(packageId);
+        await DeletePackageData(package);
         return NoContent();
+    }
+    
+    private async Task DeletePackageData(Package package) {
+        string key = $"game/{package.GameId}/package/{package.Id}";
+        try {
+            await s3.DeleteObjectAsync(_s3Settings.BucketName, key);
+        }
+        catch (AmazonS3Exception e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound) {
+            // Ignore if the file is not found
+        }
+        await packages.DeletePackage(package.Id);
     }
 
     [HttpGet("{id}/download/{platform}")]
@@ -438,8 +505,21 @@ public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3
         if (game == null) return NotFound("Game not found");
         if (game.OwnerId != userId) return Forbid();
 
-        await games.DeleteAchievement(achievementId);
+        await DeleteAchievementData(achievement);
         return NoContent();
+    }
+    
+    private async Task DeleteAchievementData(Achievement achievement) {
+        if (achievement.Icon != null) {
+            string key = $"achievement/{achievement.Id}/icon/{achievement.Icon}";
+            try {
+                await s3.DeleteObjectAsync(_s3Settings.BucketName, key);
+            }
+            catch (AmazonS3Exception e) when (e.StatusCode == System.Net.HttpStatusCode.NotFound) {
+                // Ignore if the file is not found
+            }
+        }
+        await games.DeleteAchievement(achievement.Id);
     }
 
     [HttpPost("achievement/{achievementId}/grant/{targetUserId}")]

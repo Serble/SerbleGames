@@ -60,6 +60,7 @@ builder.Services.AddDbContext<GamesDatabaseContext>(options =>
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("MySql"))));
 
 builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IAdminRepo, AdminRepo>();
 builder.Services.AddScoped<IGameRepo, GameRepo>();
 builder.Services.AddScoped<IPackageRepo, PackageRepo>();
 builder.Services.AddScoped<IJwtManager, JwtManager>();
