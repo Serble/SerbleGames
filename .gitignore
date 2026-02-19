@@ -18,3 +18,9 @@
 **/.env.production
 **/.env.*.local
 **/*.user
+**/Export
+**/export
+**/build
+**/dist
+**/out
+**/release

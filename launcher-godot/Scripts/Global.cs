@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using SerbleGames.Client;
@@ -7,10 +9,10 @@ namespace LauncherGodot.Scripts;
 
 // We'll consider this script's _Ready as the entrypoint of the app.
 public partial class Global : Node {
-	private static Global _instance;
+	public static Global Instance { get; private set; }
 	
 	public override void _Ready() {
-		_instance = this;
+		Instance = this;
 		GetViewport().GetWindow().CloseRequested += () => {
 			GetTree().Root.Mode = Window.ModeEnum.Minimized;
 			GD.Print("Minimizing instead of closing");
@@ -34,7 +36,14 @@ public partial class Global : Node {
 		});
 	}
 	
-	public static async Task GrantAchievement(string achievementId) {
+	public static async Task GrantAchievement(string gameId, string achievementId) {
+		// first off, is it already granted
+		IEnumerable<Achievement> earned = await AuthManager.Client.GetEarnedAchievements(gameId);
+		if (earned!.Any(a => a.Id == achievementId)) {
+			GD.Print("Achievement " + achievementId + " already earned, not granting again");
+			return;
+		}
+		
 		await AuthManager.Client.GrantAchievement(achievementId, (await AuthManager.GetAccountInfo()).Id);
 		
 		// TODO: display it or play sound or something. Maybe a notification in the corner?
@@ -45,7 +54,7 @@ public partial class Global : Node {
 		AcceptDialog dialog = new();
 		dialog.Title = title;
 		dialog.DialogText = message;
-		_instance.AddChild(dialog);
+		Instance.AddChild(dialog);
 		dialog.PopupCentered();
 		dialog.CloseRequested += () => dialog.QueueFree();
 	}

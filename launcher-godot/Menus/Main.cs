@@ -40,6 +40,8 @@ public partial class Main : Control {
 	private Control _currentGameAchievementsPanel;
 	private Label _currentGameAchievementCount;
 	private Label _currentGameCompatibility;
+	private Button _currentGamePlayButton;
+	private Button _currentGameUpdateButton;
 	
 	public override async void _Ready() {
 		try {
@@ -70,6 +72,8 @@ public partial class Main : Control {
 			_currentGameAchievementsPanel = GetNode<Control>("%CurrentGameAchievementsPanel");
 			_currentGameAchievementCount = GetNode<Label>("%CurrentGameAchievementCount");
 			_currentGameCompatibility = GetNode<Label>("%CurrentGameCompatibility");
+			_currentGamePlayButton = GetNode<Button>("%CurrentGamePlayButton");
+			_currentGameUpdateButton = GetNode<Button>("%CurrentGameUpdateButton");
 			
 			_currentGameContent.Visible = false;
 			_currentGameNoContent.Visible = true;
@@ -191,6 +195,7 @@ public partial class Main : Control {
 
 				if (InstallManager.IsInstalled(game.Id)) {
 					_currentGamePlay.Visible = true;
+					_currentGamePlayButton.Text = "Play";
 					_currentGameInstall.Visible = false;
 					if (InstallManager.IsRunning(game.Id)) {
 						_currentGameNotRunningContainer.Visible = false;
@@ -199,12 +204,42 @@ public partial class Main : Control {
 					else {
 						_currentGameNotRunningContainer.Visible = true;
 						_currentGameKillButton.Visible = false;
+
+						if (InstallManager.IsUpdateAvailable(game)) {
+							_currentGameUpdateButton.Visible = true;
+							_currentGamePlayButton.Visible = false;
+						}
+						else {
+							_currentGameUpdateButton.Visible = false;
+							_currentGamePlayButton.Visible = true;
+						}
 					}
 				}
 				else {
+					Button installButton = _currentGameInstall.GetChild<Button>(0);
+					
 					_currentGamePlay.Visible = false;
 					_currentGameInstall.Visible = true;
-					_currentGameInstall.GetChild<Button>(0).Disabled = !InstallManager.CanInstall(game);
+					installButton.Disabled = !InstallManager.CanInstall(game);
+					installButton.Text = "Install Game";
+					
+					if (InstallManager.IsDownloading(game.Id)) {
+						installButton.Disabled = true;
+						DownloadProgress progress = InstallManager.GetDownloadProgress(game.Id);
+						progress.ProgressChanged.Subscribe(this, p => {
+							if (p < 0) {
+								return;
+							}
+							if (game.Id != _currentGame.Id) {
+								// different game, ignore
+								return;
+							}
+							installButton.Text = $"Downloading {p * 100:N0}%...";
+						});
+						
+						installButton.Text = $"Downloading {progress.Progress * 100:N0}%...";
+						installButton.Disabled = true;
+					}
 				}
 				
 				// achievements
@@ -275,6 +310,16 @@ public partial class Main : Control {
 			GD.PrintErr("Failed to install game: " + e);
 		}
 	}
+	
+	public async void OnUpdatePressed() {
+		try {
+			await InstallManager.Update(_currentGame);
+			RefreshCurrentGame();
+		}
+		catch (Exception e) {
+			GD.PrintErr("Failed to update game: " + e);
+		}
+	}
 
 	public void OnPlayPressed() {
 		Task.Run(() => {
@@ -322,7 +367,10 @@ public partial class Main : Control {
 		RefreshCurrentGame();
 	}
 	
-	public void RefreshCurrentGame() {
+	public void RefreshCurrentGame(string id = null) {
+		if (id != null && _currentGame != null && _currentGame.Id != id) {
+			return;
+		}
 		CallDeferred("RefreshCurrentGameSync");
 	}
 

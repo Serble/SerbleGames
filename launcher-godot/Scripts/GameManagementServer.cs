@@ -29,7 +29,7 @@ public class GameManagementServer {
             await using NetworkStream stream = client.GetStream();
             
             bool isAuthenticated = false;
-            HandshakePacket handshake;
+            HandshakePacket handshake = null!;
             while (client.Connected) {
                 byte[] packetLengthBytes = _pool.Rent(4);
                 await ReadBytes(stream, packetLengthBytes, 4);
@@ -62,7 +62,7 @@ public class GameManagementServer {
                     }
 
                     case GrantAchievementPacket grantAchievement: {
-                        await Global.GrantAchievement(grantAchievement.AchievementId);
+                        await Global.GrantAchievement(handshake.GameId, grantAchievement.AchievementId);
                         new AckPacket().Serialise(stream);
                         break;
                     }

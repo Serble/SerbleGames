@@ -504,7 +504,6 @@ text = "Add to Library"
 
 [node name="CurrentGamePlay" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right" unique_id=1687771766]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_constants/margin_left = 16
@@ -522,6 +521,14 @@ layout_mode = 2
 theme_type_variation = &"SuccessButton"
 theme_override_font_sizes/font_size = 24
 text = "Play"
+
+[node name="CurrentGameUpdateButton" type="Button" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer" unique_id=2129614860]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+theme_override_font_sizes/font_size = 24
+text = "Update"
 
 [node name="MarginContainer" type="MarginContainer" parent="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer" unique_id=841082730]
 layout_mode = 2
@@ -688,6 +695,7 @@ text = "Quit"
 [connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Left/MarginContainer/CurrentGameBrowserOpen" to="." method="OpenCurrentGameInBrowser"]
 [connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGameAddToLibrary/AddToLibButton" to="." method="AddCurrentGameToLibrary"]
 [connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer/CurrentGamePlayButton" to="." method="OnPlayPressed"]
+[connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer/CurrentGameUpdateButton" to="." method="OnUpdatePressed"]
 [connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameNotRunningContainer/MarginContainer/UninstallButton" to="." method="OnUninstallPressed"]
 [connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGamePlay/CurrentGameKillButton" to="." method="OnKillPressed"]
 [connection signal="pressed" from="TabContainer/Game/Container/ScrollContainer/CurrentGameContent/Header/Right/CurrentGameInstall/InstallButton" to="." method="OnInstallPressed"]
