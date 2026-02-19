@@ -309,7 +309,15 @@ public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3
 
         Game? game = await games.GetGameById(id);
         if (game == null) return NotFound("Game not found");
-        if (game.OwnerId != userId) return Forbid();
+        if (game.OwnerId != userId) {
+            GameOwnership? ownership = await games.GetOwnership(userId, id);
+            if (ownership == null) return Forbid();
+
+            bool isLive = packageId == game.WindowsRelease
+                || packageId == game.LinuxRelease
+                || packageId == game.MacRelease;
+            if (!isLive) return Forbid();
+        }
 
         Package? package = await packages.GetPackageById(packageId);
         if (package == null || package.GameId != id) {
