@@ -1,4 +1,4 @@
-import API_BASE from '../api/client.js';
+import { API_BASE } from '../api/client.js';
 
 /**
  * Get the base API URL based on the current window location
