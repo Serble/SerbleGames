@@ -17,7 +17,7 @@ public class SerbleApiClient(HttpClient httpClient, IOptions<SerbleApiSettings> 
         };
 
         string url = QueryHelpers.AddQueryString(
-            "https://api.serble.net/api/v1/oauth/token/refresh", query);
+            $"{settings.Value.BaseUrl}oauth/token/refresh", query);
         
         HttpResponseMessage response = 
             await httpClient.PostAsync(url, new StringContent(""));
@@ -39,7 +39,7 @@ public class SerbleApiClient(HttpClient httpClient, IOptions<SerbleApiSettings> 
         };
 
         string url = QueryHelpers.AddQueryString(
-            "https://api.serble.net/api/v1/oauth/token/access", query);
+            $"{settings.Value.BaseUrl}oauth/token/access", query);
         
         HttpResponseMessage response = 
             await httpClient.PostAsync(url, new StringContent(""));
@@ -56,6 +56,6 @@ public class SerbleApiClient(HttpClient httpClient, IOptions<SerbleApiSettings> 
     public Task<SerbleUser?> GetUserInfo(string accessToken) {
         httpClient.DefaultRequestHeaders.Add("SerbleAuth", "App " + accessToken);
         
-        return httpClient.GetFromJsonAsync<SerbleUser>("https://api.serble.net/api/v1/account");
+        return httpClient.GetFromJsonAsync<SerbleUser>($"{settings.Value.BaseUrl}account");
     }
 }
