@@ -7,6 +7,7 @@ const https = require('https');
 const http = require('http');
 const { spawn } = require('child_process');
 const os = require('os');
+const AdmZip = require('adm-zip');
 
 const {
     startGameManagementServer,
@@ -202,7 +203,7 @@ function downloadFile(gameId, url, destPath, silent = false, redirectCount = 0) 
 
 function tryExtractZip(zipPath, destDir) {
   try {
-    const AdmZip = require('adm-zip');
+    process.noAsar = true;
     const zip = new AdmZip(zipPath);
     zip.extractAllTo(destDir, true /* overwrite */);
     fs.unlinkSync(zipPath);
