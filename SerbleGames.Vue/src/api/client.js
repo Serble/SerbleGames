@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const API_BASE = 'https://api.games.serble.net';
+export const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const client = axios.create({
   baseURL: API_BASE,

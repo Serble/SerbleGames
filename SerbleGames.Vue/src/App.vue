@@ -51,8 +51,8 @@ const username = ref('');
 const token = ref(localStorage.getItem('backend_token'));
 const isAuthenticated = computed(() => !!token.value);
 
-const CLIENT_ID = '3a41c262-81df-4dfb-b129-6a61f86fcb6f';
-const OAUTH_URL = 'https://serble.net/oauth/authorize';
+const CLIENT_ID = import.meta.env.VITE_SERBLE_OAUTH_CLIENT_ID;
+const OAUTH_URL = import.meta.env.VITE_SERBLE_OAUTH_URL;
 
 const login = () => {
   const state = Math.random().toString(36).substring(7);
