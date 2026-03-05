@@ -42,18 +42,92 @@
               <span v-if="game.lastPlayed" class="text-xs">Last played {{ new Date(game.lastPlayed).toLocaleDateString() }}</span>
             </div>
           </div>
-          <div class="flex flex-wrap gap-2 justify-center md:justify-end">
-            <button v-if="game.windowsRelease" @click="download('windows')" class="btn btn-outline flex items-center">
-              <Download class="w-4 h-4 mr-2" /> Windows
-            </button>
-            <button v-if="game.linuxRelease" @click="download('linux')" class="btn btn-outline flex items-center">
-              <Download class="w-4 h-4 mr-2" /> Linux
-            </button>
-            <button v-if="game.macRelease" @click="download('mac')" class="btn btn-outline flex items-center">
-              <Download class="w-4 h-4 mr-2" /> macOS
-            </button>
-            <p v-if="!game.windowsRelease && !game.linuxRelease && !game.macRelease" class="text-serble-text-muted italic">No packages available yet.</p>
-          </div>
+
+          <!-- ── Electron launcher UI ───────────────────────────────────── -->
+          <template v-if="installer.isElectron">
+            <!-- Downloading / installing -->
+            <div v-if="installer.getState(game.id).installing" class="w-full space-y-2">
+              <div class="w-full bg-serble-border/30 rounded-full h-2.5 overflow-hidden">
+                <div
+                  class="bg-serble-primary h-2.5 rounded-full transition-all"
+                  :style="{ width: `${Math.round((installer.getProgress(game.id) ?? 0) * 100)}%` }"
+                ></div>
+              </div>
+              <p class="text-sm text-center text-serble-text-muted">
+                {{ Math.round((installer.getProgress(game.id) ?? 0) * 100) }}% Installing…
+              </p>
+            </div>
+
+            <!-- Installed -->
+            <template v-else-if="installer.getState(game.id).installed">
+              <div class="flex flex-wrap gap-2 justify-center md:justify-end">
+                <button
+                  @click="installer.launch(game.id)"
+                  :disabled="installer.getState(game.id).running"
+                  class="btn flex items-center px-8"
+                  :class="installer.getState(game.id).running ? 'btn-outline opacity-60 cursor-not-allowed' : 'btn-primary'"
+                >
+                  <Play v-if="!installer.getState(game.id).running" class="w-4 h-4 mr-2" />
+                  {{ installer.getState(game.id).running ? 'Running…' : 'Play' }}
+                </button>
+
+                <button
+                  v-if="installer.getState(game.id).running"
+                  @click="installer.kill(game.id)"
+                  class="btn btn-outline text-red-400 flex items-center"
+                  title="Force stop"
+                >
+                  <Square class="w-4 h-4 mr-1" /> Stop
+                </button>
+
+                <button
+                  v-if="installer.isUpdateAvailable(game)"
+                  @click="installer.update(game)"
+                  class="btn btn-outline flex items-center"
+                >
+                  <RefreshCw class="w-4 h-4 mr-2" /> Update
+                </button>
+
+                <button
+                  v-if="!installer.getState(game.id).running"
+                  @click="installer.uninstall(game.id, game.name)"
+                  class="btn btn-outline text-red-400 flex items-center"
+                >
+                  <Trash2 class="w-4 h-4 mr-2" /> Uninstall
+                </button>
+              </div>
+            </template>
+
+            <!-- Not installed -->
+            <template v-else-if="installer.canInstall(game)">
+              <button
+                @click="installer.install(game)"
+                class="btn btn-primary flex items-center px-8"
+              >
+                <HardDriveDownload class="w-4 h-4 mr-2" /> Install
+              </button>
+            </template>
+
+            <template v-else>
+              <p class="text-serble-text-muted italic">Not available for your platform.</p>
+            </template>
+          </template>
+
+          <!-- ── Web download buttons (non-Electron) ───────────────────── -->
+          <template v-else>
+            <div class="flex flex-wrap gap-2 justify-center md:justify-end">
+              <button v-if="game.windowsRelease" @click="download('windows')" class="btn btn-outline flex items-center">
+                <Download class="w-4 h-4 mr-2" /> Windows
+              </button>
+              <button v-if="game.linuxRelease" @click="download('linux')" class="btn btn-outline flex items-center">
+                <Download class="w-4 h-4 mr-2" /> Linux
+              </button>
+              <button v-if="game.macRelease" @click="download('mac')" class="btn btn-outline flex items-center">
+                <Download class="w-4 h-4 mr-2" /> macOS
+              </button>
+              <p v-if="!game.windowsRelease && !game.linuxRelease && !game.macRelease" class="text-serble-text-muted italic">No packages available yet.</p>
+            </div>
+          </template>
         </div>
         <button v-else @click="purchase" :disabled="purchasing" class="btn btn-primary px-12 py-3 text-lg">
           {{ purchasing ? 'Adding...' : 'Add to Library' }}
@@ -151,12 +225,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowLeft, Download, Monitor, Terminal, Apple, Trophy, EyeOff, Clock } from 'lucide-vue-next';
+import { ArrowLeft, Download, Monitor, Terminal, Apple, Trophy, EyeOff, Clock, Play, Square, Trash2, RefreshCw, HardDriveDownload } from 'lucide-vue-next';
 import client from '../api/client';
 import MarkdownContent from '../components/MarkdownContent.vue';
 import { getGameIconUrl, getAchievementIconUrl, DEFAULT_ICON_URL } from '../utils/icons.js';
+import { useElectronInstaller } from '../composables/useElectronInstaller.js';
+import { lastGrantedAchievement } from '../utils/achievementEvents.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -167,6 +243,17 @@ const isOwned = ref(false);
 const purchasing = ref(false);
 const achievements = ref([]);
 const earnedAchievements = ref([]);
+const installer = useElectronInstaller();
+
+// Refresh earned achievements whenever the GMS grants one for this game.
+watch(
+  () => lastGrantedAchievement.seq,
+  () => {
+    if (lastGrantedAchievement.gameId === route.params.id) {
+      fetchEarnedAchievements();
+    }
+  },
+);
 
 const formatPlaytime = (minutes) => {
   if (minutes < 60) return `${Math.round(minutes)}m`;
@@ -219,6 +306,10 @@ const checkOwnership = async () => {
       game.value.playtime = ownedGame.playtime;
       game.value.lastPlayed = ownedGame.lastPlayed;
       await fetchEarnedAchievements();
+      // Hydrate electron install state
+      if (installer.isElectron) {
+        await installer.refreshGame(game.value.id);
+      }
     }
   } catch (e) {
     console.error(e);

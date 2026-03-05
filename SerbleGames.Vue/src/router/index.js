@@ -1,5 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import StoreView from '../views/StoreView.vue'
+
+// In Electron the app is served from file://, which doesn't support
+// the HTML5 History API – use hash-based routing instead.
+const history =
+  import.meta.env.VITE_ELECTRON === 'true'
+    ? createWebHashHistory()
+    : createWebHistory()
 
 const routes = [
   {
@@ -44,7 +51,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history,
   routes
 })
 
