@@ -33,7 +33,7 @@
         <div class="p-4 bg-serble-border/10 border-t border-serble-border flex flex-col gap-2">
           <button @click="router.push(`/game/${game.id}`)" class="btn btn-outline text-sm w-full">View Details</button>
 
-          <!-- ── Electron launcher UI ─────────────────────────────────────── -->
+          <!-- Electron launcher UI -->
           <template v-if="installer.isElectron">
             <!-- Downloading / installing -->
             <div v-if="installer.getState(game.id).installing" class="space-y-1">
@@ -105,7 +105,7 @@
             </template>
           </template>
 
-          <!-- ── Web download buttons (non-Electron) ──────────────────────── -->
+          <!-- Web download buttons (non-Electron) -->
           <template v-else>
             <div class="flex gap-2">
               <button

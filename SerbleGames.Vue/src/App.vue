@@ -39,7 +39,7 @@
     </footer>
   </div>
 
-  <!-- Achievement toast overlay – rendered outside the layout via Teleport -->
+  <!-- Achievement toast overlay element -->
   <AchievementToast />
 </template>
 
@@ -53,21 +53,22 @@ import { isElectron } from './utils/electron.js';
 import { lastGrantedAchievement } from './utils/achievementEvents.js';
 import { useAchievementToasts } from './composables/useAchievementToasts.js';
 import AchievementToast from './components/AchievementToast.vue';
+import { useAuth } from './composables/useAuth.js';
 
 const { addToast } = useAchievementToasts();
 
 const router = useRouter();
-const username = ref('');
-const token = ref(localStorage.getItem('backend_token'));
-const isAuthenticated = computed(() => !!token.value);
+const { username, token, isAuthenticated, fetchUser } = useAuth();
 
 const CLIENT_ID = import.meta.env.VITE_SERBLE_OAUTH_CLIENT_ID;
 const OAUTH_URL = import.meta.env.VITE_SERBLE_OAUTH_URL;
 const ELECTRON_CALLBACK_PORT = 13580;
 
 const login = async () => {
+  
+  // on electron we need to spin up a local server to handle the OAuth
+  // because doing it in the electron window causes issues and is a bad experience anyway.
   if (isElectron()) {
-    // ── Electron: open the real browser, receive code via local server ──────
     const state = Math.random().toString(36).substring(7);
     const redirectUri = `http://localhost:${ELECTRON_CALLBACK_PORT}/callback`;
     const params = new URLSearchParams({
@@ -94,9 +95,10 @@ const login = async () => {
     return;
   }
 
-  // ── Web: redirect the page (existing behaviour) ──────────────────────────
+  // Otherwise just redirect to the web OAuth flow as normal
+  // there's not much to interrupt.
   const state = Math.random().toString(36).substring(7);
-  const redirectUri = window.location.origin + '/';
+  const redirectUri = window.location.origin + '/callback';
   const params = new URLSearchParams({
     response_type: 'token',
     client_id: CLIENT_ID,
@@ -115,21 +117,7 @@ const logout = () => {
   router.push({ name: 'store' });
 };
 
-const fetchUser = async () => {
-  if (!isAuthenticated.value) return;
-  try {
-    const response = await client.get('/account');
-    username.value = response.data.username;
-    // Push the confirmed-valid token to the main process so the GMS can use it.
-    if (isElectron()) window.electronAPI.setAuthContext(token.value, API_BASE);
-  } catch (e) {
-    if (e.response?.status === 401) {
-      logout();
-    }
-  }
-};
-
-// ─── Achievement notification listener (Electron only) ───────────────────────
+// Achievement notifications
 let removeAchievementListener = null;
 
 onUnmounted(() => {
@@ -140,33 +128,11 @@ onMounted(async () => {
   // Set up IPC listener for achievement grants so we can toast + refresh the UI.
   if (isElectron()) {
     removeAchievementListener = window.electronAPI.onAchievementGranted((data) => {
-      // 1. The overlay toast window handles the visual notification in Electron.
-      //    The in-app toast is only used on web.
-
-      // 2. Signal any relevant view (e.g. GameDetailView) to refresh its earned list
+      // Tell any views to refresh achievement data if they care about it
       lastGrantedAchievement.gameId        = data.gameId;
       lastGrantedAchievement.achievementId = data.achievementId;
       lastGrantedAchievement.seq++;
     });
-  }
-
-  if (!isElectron()) {
-    // ── Web: handle OAuth redirect callback ────────────────────────────────
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (code) {
-      window.history.replaceState({}, document.title, '/');
-      try {
-        const response = await client.post('/auth', { code });
-        const newToken = response.data.accessToken;
-        localStorage.setItem('backend_token', newToken);
-        token.value = newToken;
-        await fetchUser();
-      } catch (e) {
-        console.error('Auth failed', e);
-      }
-      return;
-    }
   }
 
   await fetchUser();

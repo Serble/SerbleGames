@@ -43,7 +43,7 @@
             </div>
           </div>
 
-          <!-- ── Electron launcher UI ───────────────────────────────────── -->
+          <!-- Electron launcher UI (install/update/etc.) -->
           <template v-if="installer.isElectron">
             <!-- Downloading / installing -->
             <div v-if="installer.getState(game.id).installing" class="w-full space-y-2">
@@ -113,7 +113,7 @@
             </template>
           </template>
 
-          <!-- ── Web download buttons (non-Electron) ───────────────────── -->
+          <!-- Web download buttons (non-Electron) -->
           <template v-else>
             <div class="flex flex-wrap gap-2 justify-center md:justify-end">
               <button v-if="game.windowsRelease" @click="download('windows')" class="btn btn-outline flex items-center">

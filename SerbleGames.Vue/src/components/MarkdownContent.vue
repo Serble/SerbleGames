@@ -1,3 +1,5 @@
+<!-- This is for game descriptions, which allow markdown -->
+
 <template>
   <div class="markdown-content" v-html="renderedMarkdown"></div>
 </template>

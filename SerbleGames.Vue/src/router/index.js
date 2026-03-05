@@ -47,6 +47,11 @@ const routes = [
     name: 'admin',
     component: () => import('../views/AdminView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/callback',
+    name: 'callback',
+    component: () => import('../views/CallbackView.vue')
   }
 ]
 

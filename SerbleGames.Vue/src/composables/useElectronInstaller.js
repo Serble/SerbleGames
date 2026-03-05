@@ -2,7 +2,7 @@ import { reactive } from 'vue';
 import client from '../api/client.js';
 import { isElectron, getElectronPlatform } from '../utils/electron.js';
 
-// ─── Module-level shared state ────────────────────────────────────────────────
+// Module-level shared state
 // Shared between all composable instances so every view stays in sync.
 
 /**
@@ -70,7 +70,7 @@ function initGlobalListeners() {
   });
 }
 
-// ─── Composable ───────────────────────────────────────────────────────────────
+// Composable
 
 export function useElectronInstaller() {
   const electronAvailable = isElectron();
@@ -80,7 +80,7 @@ export function useElectronInstaller() {
     initGlobalListeners();
   }
 
-  // ── State helpers ──────────────────────────────────────────────────────────
+  // State helpers
 
   /** Returns the reactive state object for a game, creating it if absent. */
   const getState = (gameId) => ensureState(gameId);
@@ -88,7 +88,7 @@ export function useElectronInstaller() {
   /** Returns current download progress (0–1) for a game, or null if idle. */
   const getProgress = (gameId) => downloadProgress[gameId] ?? null;
 
-  // ── Per-game refresh ───────────────────────────────────────────────────────
+  // Per-game refresh
 
   const refreshGame = async (gameId) => {
     if (!electronAvailable) return;
@@ -107,7 +107,7 @@ export function useElectronInstaller() {
     await Promise.all(gameIds.map((id) => refreshGame(id)));
   };
 
-  // ── Capability checks ──────────────────────────────────────────────────────
+  // Capability checks
 
   /**
    * Returns true if the current platform has a release for this game.
@@ -130,7 +130,7 @@ export function useElectronInstaller() {
     return s.version !== latest;
   };
 
-  // ── Actions ────────────────────────────────────────────────────────────────
+  // Actions
 
   const install = async (game) => {
     if (!electronAvailable || !platform) return;
