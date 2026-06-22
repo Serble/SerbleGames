@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.AspNetCore.Authorization;
@@ -16,8 +17,9 @@ namespace SerbleGames.Backend.Routes;
 [Authorize]
 public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3, IOptions<S3Settings> s3Settings, IUserRepo users, IAdminRepo adminRepo) : ControllerBase {
     private readonly S3Settings _s3Settings = s3Settings.Value;
-    
+
     private static readonly string[] ValidPlatforms = ["windows", "linux", "mac"];
+    private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
     
     [HttpPost]
     public async Task<ActionResult<Game>> Post(GameCreateRequest request) {
@@ -356,6 +358,20 @@ public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3
         await packages.DeletePackage(package.Id);
     }
 
+    private static string BuildDownloadFileName(string gameName) {
+        StringBuilder builder = new(gameName.Length);
+        foreach (char c in gameName) {
+            builder.Append(InvalidFileNameChars.Contains(c) ? '_' : c);
+        }
+
+        string sanitized = builder.ToString().Trim();
+        if (string.IsNullOrWhiteSpace(sanitized)) {
+            sanitized = "game";
+        }
+
+        return $"{sanitized}.zip";
+    }
+
     [HttpGet("{id}/download/{platform}")]
     public async Task<ActionResult<string>> GetDownloadUrl(string id, string platform) {
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -379,12 +395,16 @@ public class GameController(IGameRepo games, IPackageRepo packages, IAmazonS3 s3
 
         if (buildId == null) return NotFound("No build found for this platform");
         string key = $"game/{id}/package/{buildId}";
+        string downloadFileName = BuildDownloadFileName(game.Name);
 
         GetPreSignedUrlRequest request = new() {
             BucketName = _s3Settings.BucketName,
             Key = key,
             Verb = HttpVerb.GET,
-            Expires = DateTime.UtcNow.AddMinutes(_s3Settings.PresignExpiryMinutes)
+            Expires = DateTime.UtcNow.AddMinutes(_s3Settings.PresignExpiryMinutes),
+            ResponseHeaderOverrides = new ResponseHeaderOverrides {
+                ContentDisposition = $"attachment; filename=\"{downloadFileName}\""
+            }
         };
         
         // check if the file exists in S3 before returning the URL, otherwise return 404
