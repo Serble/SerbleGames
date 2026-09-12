@@ -68,6 +68,13 @@ builder.Services.AddHttpClient<ISerbleApiClient, SerbleApiClient>();
 
 WebApplication app = builder.Build();
 
+using (IServiceScope scope = app.Services.CreateScope()) {
+    GamesDatabaseContext db = scope.ServiceProvider.GetRequiredService<GamesDatabaseContext>();
+    app.Logger.LogInformation("Applying database migrations...");
+    db.Database.Migrate();
+    app.Logger.LogInformation("Database migrations applied");
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.MapOpenApi();
